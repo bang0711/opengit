@@ -6,7 +6,11 @@ import { homedir, tmpdir } from "node:os";
 import { dirname, isAbsolute, join } from "node:path";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { getValidActiveRepoPath, setActiveRepoPath } from "@/lib/active-repo";
+import {
+  clearActiveRepo,
+  getActiveRepoId,
+  setActiveRepo,
+} from "@/lib/active-repo";
 import { splitDiffIntoHunks } from "@/lib/diff";
 import {
   type BlameLine,
@@ -26,6 +30,8 @@ import {
   type RebaseCommit,
   runGit,
 } from "@/lib/git";
+import { withRepoLock } from "@/lib/repo-lock";
+import { registerRepo, resolveRepoPath } from "@/lib/repo-registry";
 
 export type ActionState = { error?: string };
 
@@ -84,7 +90,13 @@ export async function openRepo(
   if (!existsSync(path)) return { error: "Path does not exist." };
   if (!(await isGitRepo(path))) return { error: "Not a git repository." };
 
-  await setActiveRepoPath(path);
+  let repoId: string;
+  try {
+    repoId = await registerRepo(path);
+  } catch (err) {
+    return { error: (err as Error).message };
+  }
+  await setActiveRepo(repoId, path);
   redirect("/");
 }
 
@@ -107,40 +119,52 @@ export async function cloneRepo(
       .pop() || "repo";
   const target = join(parent, name);
 
+  let repoId: string;
   try {
     await mkdir(parent, { recursive: true });
     await runGit(parent, ["clone", url, target]);
+    repoId = await registerRepo(target);
   } catch (err) {
     return {
       error: err instanceof GitError ? err.message : "Clone failed.",
     };
   }
 
-  await setActiveRepoPath(target);
+  await setActiveRepo(repoId, target);
   redirect("/");
 }
 
 export async function closeRepo(): Promise<void> {
-  await setActiveRepoPath(null);
+  await clearActiveRepo();
   redirect("/");
 }
 
-async function requireActiveRepo(): Promise<string> {
-  const path = await getValidActiveRepoPath();
-  if (!path) throw new Error("No active repository.");
-  return path;
+/** Resolve the active repo to {repoId, path}, enforcing ownership + validity. */
+async function requireActiveRepoCtx(): Promise<{
+  repoId: string;
+  path: string;
+}> {
+  const repoId = await getActiveRepoId();
+  if (!repoId) throw new Error("No active repository.");
+  const path = await resolveRepoPath(repoId);
+  return { repoId, path };
 }
 
-/** Wrap a git mutation: run it, refresh the workspace, surface errors. */
+/** Active repo path only (for read-only actions). */
+async function requireActiveRepo(): Promise<string> {
+  return (await requireActiveRepoCtx()).path;
+}
+
+/** Wrap a git mutation: run it under the repo lock, refresh, surface errors. */
 async function gitAction(args: string[]): Promise<ActionState> {
-  let repo: string;
+  let ctx: { repoId: string; path: string };
   try {
-    repo = await requireActiveRepo();
+    ctx = await requireActiveRepoCtx();
   } catch (err) {
     return { error: (err as Error).message };
   }
   try {
-    await runGit(repo, args);
+    await withRepoLock(ctx.repoId, () => runGit(ctx.path, args));
   } catch (err) {
     // A failed merge/pull may still leave the tree in a conflicted state —
     // revalidate so the conflict banner shows up.
@@ -311,18 +335,18 @@ export async function createTagAt(
 
 // ── Conflict resolution ─────────────────────────────────────────────────────
 
-/** Run arbitrary repo work, then revalidate every route under the layout. */
+/** Run arbitrary repo work under the repo lock, then revalidate every route. */
 async function mutate(
   work: (repo: string) => Promise<void>,
 ): Promise<ActionState> {
-  let repo: string;
+  let ctx: { repoId: string; path: string };
   try {
-    repo = await requireActiveRepo();
+    ctx = await requireActiveRepoCtx();
   } catch (err) {
     return { error: (err as Error).message };
   }
   try {
-    await work(repo);
+    await withRepoLock(ctx.repoId, () => work(ctx.path));
   } catch (err) {
     return {
       error: err instanceof GitError ? err.message : "git command failed.",
