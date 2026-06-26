@@ -1,13 +1,57 @@
 {
-  "name": "opengit",
+  "name": "OpenGit",
   "version": "0.1.0",
   "private": true,
+  "description": "A git client desktop app",
+  "author": "Chau Chan Bang <chau.chan.bang@pwc.com>",
+  "main": "electron/main.cjs",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "biome check",
-    "format": "biome format --write"
+    "format": "biome format --write",
+    "icons": "node scripts/generate-icons.mjs",
+    "licenses": "generate-license-file --input package.json --output THIRD-PARTY-NOTICES.txt --overwrite",
+    "electron:dev": "concurrently -k -n NEXT,ELECTRON -c yellow,blue \"next dev\" \"electron .\"",
+    "electron:build": "node scripts/generate-icons.mjs && bun run licenses && next build && node scripts/prepare-standalone.mjs && electron-builder"
+  },
+  "build": {
+    "appId": "com.opengit.desktop",
+    "productName": "OpenGit",
+    "directories": {
+      "output": "release",
+      "buildResources": "build"
+    },
+    "asar": false,
+    "files": [
+      "electron/**/*",
+      "package.json",
+      "THIRD-PARTY-NOTICES.txt",
+      {
+        "from": ".next/standalone",
+        "to": "server"
+      }
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "build/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "OpenGit",
+      "artifactName": "OpenGit-Setup-${version}.${ext}"
+    },
+    "mac": {
+      "target": "dmg"
+    },
+    "linux": {
+      "target": "AppImage"
+    }
   },
   "dependencies": {
     "@remixicon/react": "^4.9.0",
@@ -31,6 +75,10 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "concurrently": "^10.0.3",
+    "electron": "^42.5.0",
+    "electron-builder": "^26.15.3",
+    "generate-license-file": "^4.2.1",
     "prettier": "^3.8.4",
     "prettier-plugin-tailwindcss": "^0.8.0",
     "tailwindcss": "^4",

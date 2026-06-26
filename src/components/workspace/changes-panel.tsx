@@ -339,27 +339,33 @@ function FileRow({
           >
             {file.path}
           </Link>
-          <div className="ml-auto flex shrink-0 items-center opacity-0 group-hover:opacity-100">
-            {onDiscard ? (
+          <div className="ml-auto flex shrink-0 items-center gap-1.5">
+            <DiffStat
+              adds={staged ? file.stagedAdds : file.unstagedAdds}
+              dels={staged ? file.stagedDels : file.unstagedDels}
+            />
+            <div className="flex items-center opacity-0 group-hover:opacity-100">
+              {onDiscard ? (
+                <Button
+                  variant="ghost"
+                  size="icon-xs"
+                  disabled={pending}
+                  title="Discard changes"
+                  onClick={onDiscard}
+                >
+                  <RiArrowGoBackLine />
+                </Button>
+              ) : null}
               <Button
                 variant="ghost"
                 size="icon-xs"
                 disabled={pending}
-                title="Discard changes"
-                onClick={onDiscard}
+                title={staged ? "Unstage" : "Stage"}
+                onClick={onPrimary}
               >
-                <RiArrowGoBackLine />
+                {staged ? <RiSubtractLine /> : <RiAddLine />}
               </Button>
-            ) : null}
-            <Button
-              variant="ghost"
-              size="icon-xs"
-              disabled={pending}
-              title={staged ? "Unstage" : "Stage"}
-              onClick={onPrimary}
-            >
-              {staged ? <RiSubtractLine /> : <RiAddLine />}
-            </Button>
+            </div>
           </div>
         </div>
       </ContextMenuTrigger>
@@ -390,6 +396,18 @@ function FileRow({
         </ContextMenuItem>
       </ContextMenuContent>
     </ContextMenu>
+  );
+}
+
+// Per-file line counts, mirroring the commit detail list. Hidden entirely when
+// there's nothing useful to show (untracked / binary report -1).
+function DiffStat({ adds, dels }: { adds: number; dels: number }) {
+  if (adds <= 0 && dels <= 0) return null;
+  return (
+    <span className="flex items-center gap-1 font-mono text-[0.625rem]">
+      {adds > 0 ? <span className="text-green-500">+{adds}</span> : null}
+      {dels > 0 ? <span className="text-red-500">−{dels}</span> : null}
+    </span>
   );
 }
 

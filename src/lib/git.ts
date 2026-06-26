@@ -3,6 +3,7 @@ import "server-only";
 import { execFile } from "node:child_process";
 import { existsSync } from "node:fs";
 import { readFile } from "node:fs/promises";
+import { devNull } from "node:os";
 import { basename, isAbsolute, join } from "node:path";
 import { promisify } from "node:util";
 
@@ -14,6 +15,40 @@ const RS = "\x1e";
 
 const MAX_BUFFER = 64 * 1024 * 1024;
 
+// Hard wall-clock cap per git invocation. A hung git (auth prompt, dead remote)
+// would otherwise pin a request forever. Override with OPENGIT_GIT_TIMEOUT_MS.
+const GIT_TIMEOUT_MS = Number(process.env.OPENGIT_GIT_TIMEOUT_MS) || 30_000;
+
+// Global flags prepended to EVERY git call. Pointing core.hooksPath at the null
+// device means git finds no hook scripts — a cloned/uploaded repo can't run
+// arbitrary code on the server via post-checkout/pre-commit/etc. hooks.
+const SAFE_FLAGS = ["-c", `core.hooksPath=${devNull}`];
+
+// Minimal, allow-listed environment for the git subprocess. Spreading the
+// server's full process.env would leak every secret into git AND into anything
+// git might exec. We pass only what git needs to run, plus hardening vars.
+function gitEnv(extra?: Record<string, string>): NodeJS.ProcessEnv {
+  const e = process.env;
+  const base: NodeJS.ProcessEnv = {
+    NODE_ENV: e.NODE_ENV,
+    PATH: e.PATH,
+    // git on Windows needs these to locate itself and the user profile.
+    SystemRoot: e.SystemRoot,
+    SYSTEMROOT: e.SYSTEMROOT,
+    HOME: e.HOME,
+    USERPROFILE: e.USERPROFILE,
+    APPDATA: e.APPDATA,
+    LOCALAPPDATA: e.LOCALAPPDATA,
+    // Never block on an interactive prompt: fail fast instead of hanging.
+    GIT_TERMINAL_PROMPT: "0",
+    GIT_ASKPASS: "",
+    SSH_ASKPASS: "",
+    // Ignore /etc/gitconfig — don't inherit machine-wide config on a shared host.
+    GIT_CONFIG_NOSYSTEM: "1",
+  };
+  return extra ? { ...base, ...extra } : base;
+}
+
 export type GitResult = { stdout: string; stderr: string };
 
 /** Run a git command in `cwd`. Throws GitError on non-zero exit. */
@@ -23,12 +58,17 @@ export async function runGit(
   opts?: { env?: Record<string, string> },
 ): Promise<GitResult> {
   try {
-    const { stdout, stderr } = await execFileAsync("git", args, {
-      cwd,
-      maxBuffer: MAX_BUFFER,
-      windowsHide: true,
-      env: opts?.env ? { ...process.env, ...opts.env } : process.env,
-    });
+    const { stdout, stderr } = await execFileAsync(
+      "git",
+      [...SAFE_FLAGS, ...args],
+      {
+        cwd,
+        maxBuffer: MAX_BUFFER,
+        windowsHide: true,
+        timeout: GIT_TIMEOUT_MS,
+        env: gitEnv(opts?.env),
+      },
+    );
     return { stdout, stderr };
   } catch (err) {
     const e = err as { stderr?: string; message?: string; stdout?: string };
@@ -208,16 +248,50 @@ export type FileStatus = {
   staged: boolean;
   unstaged: boolean;
   untracked: boolean;
+  // Line counts; -1 = unknown (binary, or untracked). Staged side = index vs
+  // HEAD, unstaged side = worktree vs index.
+  stagedAdds: number;
+  stagedDels: number;
+  unstagedAdds: number;
+  unstagedDels: number;
 };
 
+type Stat = { adds: number; dels: number };
+
+// Parse `git diff --numstat -z` into a path → {adds, dels} map. Binary files
+// report "-" counts (→ -1). Renames emit an empty path then old + new tokens.
+async function numstat(
+  path: string,
+  extra: string[],
+): Promise<Map<string, Stat>> {
+  const { stdout } = await runGit(path, ["diff", "--numstat", "-z", ...extra]);
+  const tokens = stdout.split("\0");
+  const map = new Map<string, Stat>();
+  for (let i = 0; i < tokens.length; i++) {
+    const t = tokens[i];
+    if (!t) continue;
+    const m = /^(\d+|-)\t(\d+|-)\t(.*)$/.exec(t);
+    if (!m) continue;
+    let file = m[3];
+    if (file === "") {
+      i++; // old path
+      file = tokens[++i] ?? ""; // new path
+    }
+    map.set(file, {
+      adds: m[1] === "-" ? -1 : Number(m[1]),
+      dels: m[2] === "-" ? -1 : Number(m[2]),
+    });
+  }
+  return map;
+}
+
 export async function getStatus(path: string): Promise<FileStatus[]> {
-  const { stdout } = await runGit(path, [
-    "status",
-    "--porcelain=v1",
-    "-z",
-    "--untracked-files=all",
+  const [status, unstagedStat, stagedStat] = await Promise.all([
+    runGit(path, ["status", "--porcelain=v1", "-z", "--untracked-files=all"]),
+    numstat(path, []),
+    numstat(path, ["--cached"]),
   ]);
-  const entries = stdout.split("\0").filter(Boolean);
+  const entries = status.stdout.split("\0").filter(Boolean);
   const files: FileStatus[] = [];
 
   for (let i = 0; i < entries.length; i++) {
@@ -230,6 +304,8 @@ export async function getStatus(path: string): Promise<FileStatus[]> {
       i++; // consume source path
     }
     const untracked = x === "?" && y === "?";
+    const us = unstagedStat.get(file);
+    const st = stagedStat.get(file);
     files.push({
       path: file,
       index: x,
@@ -237,6 +313,11 @@ export async function getStatus(path: string): Promise<FileStatus[]> {
       staged: !untracked && x !== " " && x !== "?",
       unstaged: y !== " " && y !== "?",
       untracked,
+      stagedAdds: st?.adds ?? 0,
+      stagedDels: st?.dels ?? 0,
+      // Untracked isn't in numstat; mark unknown (-1) rather than 0.
+      unstagedAdds: us?.adds ?? (untracked ? -1 : 0),
+      unstagedDels: us?.dels ?? 0,
     });
   }
   return files;

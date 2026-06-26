@@ -44,3 +44,10 @@ next-env.d.ts
 .claude
 .codegraph
 .mcp.json
+
+# electron build output
+/dist
+/release
+
+# generated at build time
+/THIRD-PARTY-NOTICES.txt

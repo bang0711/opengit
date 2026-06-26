@@ -1,26 +1,36 @@
 import "server-only";
 
 import { cookies } from "next/headers";
-import { isGitRepo } from "@/lib/git";
+import { resolveRepoPath } from "@/lib/repo-registry";
 
+// Active repo is identified by an opaque repoId, never a filesystem path. The
+// id is resolved + authorized server-side (see repo-registry), so a tampered
+// cookie can't point the app at an arbitrary directory or another user's repo.
 const ACTIVE_COOKIE = "opengit.active";
+// Recent is display-only: the last few paths shown in the picker. Reopening one
+// re-runs registration + authorization, so it is not a trust boundary.
 const RECENT_COOKIE = "opengit.recent";
 const ONE_YEAR = 60 * 60 * 24 * 365;
 
-/** Absolute path of the repo currently open, or null. */
-export async function getActiveRepoPath(): Promise<string | null> {
+/** The active repoId from the cookie, or null. */
+export async function getActiveRepoId(): Promise<string | null> {
   const store = await cookies();
-  const path = store.get(ACTIVE_COOKIE)?.value;
-  return path?.trim() ? path : null;
+  const id = store.get(ACTIVE_COOKIE)?.value;
+  return id?.trim() ? id : null;
 }
 
-/** Active repo path, but only if it still points at a real git repo. */
+/** Active repo resolved to a validated, authorized path — or null if invalid. */
 export async function getValidActiveRepoPath(): Promise<string | null> {
-  const path = await getActiveRepoPath();
-  if (!path) return null;
-  return (await isGitRepo(path)) ? path : null;
+  const id = await getActiveRepoId();
+  if (!id) return null;
+  try {
+    return await resolveRepoPath(id);
+  } catch {
+    return null;
+  }
 }
 
+/** Recent repo paths for the picker (display only). */
 export async function getRecentRepos(): Promise<string[]> {
   const store = await cookies();
   const raw = store.get(RECENT_COOKIE)?.value;
@@ -35,16 +45,17 @@ export async function getRecentRepos(): Promise<string[]> {
   }
 }
 
-export async function setActiveRepoPath(path: string | null): Promise<void> {
+/** Mark `repoId` active and remember `path` in the recent list. */
+export async function setActiveRepo(
+  repoId: string,
+  path: string,
+): Promise<void> {
   const store = await cookies();
-  if (!path) {
-    store.delete(ACTIVE_COOKIE);
-    return;
-  }
-  store.set(ACTIVE_COOKIE, path, {
+  store.set(ACTIVE_COOKIE, repoId, {
     path: "/",
     maxAge: ONE_YEAR,
     sameSite: "lax",
+    httpOnly: true,
   });
 
   const recent = await getRecentRepos();
@@ -54,4 +65,10 @@ export async function setActiveRepoPath(path: string | null): Promise<void> {
     maxAge: ONE_YEAR,
     sameSite: "lax",
   });
+}
+
+/** Close the active repo (leaves recent list intact). */
+export async function clearActiveRepo(): Promise<void> {
+  const store = await cookies();
+  store.delete(ACTIVE_COOKIE);
 }

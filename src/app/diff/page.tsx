@@ -102,11 +102,14 @@ async function WorkingTreeDiff({
 }) {
   const status = await getStatus(repo);
   const changed = status.filter((f) => f.staged || f.unstaged || f.untracked);
+  // Total change vs HEAD = staged (index vs HEAD) + unstaged (worktree vs
+  // index). A -1 on either side means binary/unknown — keep it -1 (hidden).
+  const sum = (a: number, b: number) => (a < 0 || b < 0 ? -1 : a + b);
   const files: CommitFile[] = changed.map((f) => ({
     path: f.path,
     status: f.untracked ? "?" : f.worktree !== " " ? f.worktree : f.index,
-    additions: -1,
-    deletions: -1,
+    additions: sum(f.stagedAdds, f.unstagedAdds),
+    deletions: sum(f.stagedDels, f.unstagedDels),
   }));
   const tree = buildFileTree(files);
   const selected = file ?? files[0]?.path ?? null;
