@@ -36,6 +36,23 @@ const gh = (args) =>
     .toString()
     .trim();
 
+// Preflight: gh must be installed + authed. ENOENT = not on PATH.
+try {
+  gh(["--version"]);
+} catch (err) {
+  if (err.code === "ENOENT") {
+    console.error(
+      "gh CLI not found. Install it, then re-run:\n" +
+        "  winget install --id GitHub.cli\n" +
+        "  gh auth login\n" +
+        "Open a NEW terminal after installing so gh is on PATH.",
+    );
+  } else {
+    console.error(`gh failed: ${err.message}`);
+  }
+  process.exit(1);
+}
+
 // Reuse the release if the tag already exists; otherwise create it.
 let exists = true;
 try {
