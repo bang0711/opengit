@@ -9,6 +9,7 @@ import {
 } from "@remixicon/react";
 import { useState } from "react";
 import { createBranch, createRemoteBranch, publishBranch } from "@/app/actions";
+import { ActionTooltip } from "@/components/action-tooltip";
 import { NameDialog } from "@/components/name-dialog";
 import { Button } from "@/components/ui/button";
 import { ContextMenuItem } from "@/components/ui/context-menu";
@@ -85,15 +86,16 @@ export function SidebarPanel({ branches, remotes, tags, stashes }: Props) {
             count={local.length}
             defaultOpen
             action={
-              <Button
-                variant="ghost"
-                size="icon-xs"
-                title="New branch"
-                disabled={creating}
-                onClick={() => setNewBranchOpen(true)}
-              >
-                <RiAddLine />
-              </Button>
+              <ActionTooltip label="New branch">
+                <Button
+                  variant="ghost"
+                  size="icon-xs"
+                  disabled={creating}
+                  onClick={() => setNewBranchOpen(true)}
+                >
+                  <RiAddLine />
+                </Button>
+              </ActionTooltip>
             }
             contextActions={
               <ContextMenuItem
@@ -117,15 +119,16 @@ export function SidebarPanel({ branches, remotes, tags, stashes }: Props) {
             defaultOpen
             action={
               remoteNames.length > 0 ? (
-                <Button
-                  variant="ghost"
-                  size="icon-xs"
-                  title="New remote branch"
-                  disabled={publishing}
-                  onClick={() => setNewRemoteOpen(true)}
-                >
-                  <RiAddLine />
-                </Button>
+                <ActionTooltip label="New remote branch">
+                  <Button
+                    variant="ghost"
+                    size="icon-xs"
+                    disabled={publishing}
+                    onClick={() => setNewRemoteOpen(true)}
+                  >
+                    <RiAddLine />
+                  </Button>
+                </ActionTooltip>
               ) : null
             }
             contextActions={

@@ -6,6 +6,7 @@ import {
   RiGitBranchLine,
   RiLoader4Line,
 } from "@remixicon/react";
+import { ActionTooltip } from "@/components/action-tooltip";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -70,17 +71,18 @@ export function PushButton({
       </Tooltip>
 
       <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button
-            variant="outline"
-            size="icon-sm"
-            disabled={pending}
-            title="Push options"
-            className="rounded-l-none border-l-0"
-          >
-            <RiArrowDownSLine />
-          </Button>
-        </DropdownMenuTrigger>
+        <ActionTooltip label="Push options">
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="outline"
+              size="icon-sm"
+              disabled={pending}
+              className="rounded-l-none border-l-0"
+            >
+              <RiArrowDownSLine />
+            </Button>
+          </DropdownMenuTrigger>
+        </ActionTooltip>
         <DropdownMenuContent align="end" className="w-60">
           <DropdownMenuLabel>Push options</DropdownMenuLabel>
           <DropdownMenuItem onSelect={onPush}>

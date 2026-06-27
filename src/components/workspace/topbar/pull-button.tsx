@@ -10,6 +10,7 @@ import {
 } from "@remixicon/react";
 import { useEffect, useState } from "react";
 import type { PullMode } from "@/app/actions";
+import { ActionTooltip } from "@/components/action-tooltip";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -113,17 +114,18 @@ export function PullButton({
         <TooltipContent>Pull — {current.label}</TooltipContent>
       </Tooltip>
       <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button
-            variant="outline"
-            size="icon-sm"
-            disabled={pending}
-            title="Pull options"
-            className="rounded-l-none"
-          >
-            <RiArrowDownSLine />
-          </Button>
-        </DropdownMenuTrigger>
+        <ActionTooltip label="Pull options">
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="outline"
+              size="icon-sm"
+              disabled={pending}
+              className="rounded-l-none"
+            >
+              <RiArrowDownSLine />
+            </Button>
+          </DropdownMenuTrigger>
+        </ActionTooltip>
 
         <DropdownMenuContent align="end" className="w-72">
           <DropdownMenuLabel>Pull behaviour (sets default)</DropdownMenuLabel>

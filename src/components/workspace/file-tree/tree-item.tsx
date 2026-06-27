@@ -18,12 +18,14 @@ export function TreeItem({
   selected,
   wt,
   depth,
+  onSelect,
 }: {
   node: TreeNode;
   sha?: string;
   selected: string | null;
   wt?: boolean;
   depth: number;
+  onSelect?: (path: string) => void;
 }) {
   const [open, setOpen] = usePersistedState(`opengit.tree:${node.path}`, true);
   const pad = { paddingLeft: 8 + depth * 12 };
@@ -38,11 +40,11 @@ export function TreeItem({
           className="hover:bg-muted/60 flex w-full items-center gap-1 py-0.5 pr-2 text-left"
         >
           {open ? (
-            <RiArrowDownSLine className="size-3.5 shrink-0 text-muted-foreground" />
+            <RiArrowDownSLine className="text-muted-foreground size-3.5 shrink-0" />
           ) : (
-            <RiArrowRightSLine className="size-3.5 shrink-0 text-muted-foreground" />
+            <RiArrowRightSLine className="text-muted-foreground size-3.5 shrink-0" />
           )}
-          <RiFolder3Line className="size-3.5 shrink-0 text-muted-foreground" />
+          <RiFolder3Line className="text-muted-foreground size-3.5 shrink-0" />
           <span className="truncate">{node.name}</span>
         </button>
         {open ? (
@@ -55,6 +57,7 @@ export function TreeItem({
                 selected={selected}
                 wt={wt}
                 depth={depth + 1}
+                onSelect={onSelect}
               />
             ))}
           </div>
@@ -64,23 +67,45 @@ export function TreeItem({
   }
 
   const active = node.path === selected;
+  const leafPad = { paddingLeft: 8 + depth * 12 + 18 };
+  const className = cn(
+    "flex w-full items-center gap-1.5 py-0.5 pr-2 text-left",
+    active
+      ? "bg-primary/15 text-foreground"
+      : "hover:bg-muted/60 text-muted-foreground",
+  );
+  const inner = (
+    <>
+      <FileIcon name={node.name} />
+      <span className="truncate">{node.name}</span>
+      <Stat file={node.file} />
+    </>
+  );
+
+  // Client-switching mode: select without navigating.
+  if (onSelect) {
+    return (
+      <button
+        type="button"
+        onClick={() => onSelect(node.path)}
+        style={leafPad}
+        className={className}
+      >
+        {inner}
+      </button>
+    );
+  }
+
   const query = wt
     ? { wt: "1", file: node.path }
     : { sha: sha ?? "", file: node.path };
   return (
     <Link
       href={{ pathname: "/diff", query }}
-      style={{ paddingLeft: 8 + depth * 12 + 18 }}
-      className={cn(
-        "flex items-center gap-1.5 py-0.5 pr-2",
-        active
-          ? "bg-primary/15 text-foreground"
-          : "hover:bg-muted/60 text-muted-foreground",
-      )}
+      style={leafPad}
+      className={className}
     >
-      <FileIcon name={node.name} />
-      <span className="truncate">{node.name}</span>
-      <Stat file={node.file} />
+      {inner}
     </Link>
   );
 }

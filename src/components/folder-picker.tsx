@@ -9,6 +9,7 @@ import {
 } from "@remixicon/react";
 import { useState, useTransition } from "react";
 import { type DirListing, listDirectory } from "@/app/actions";
+import { ActionTooltip } from "@/components/action-tooltip";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -73,24 +74,26 @@ export function FolderPicker({
         </DialogHeader>
 
         <div className="flex items-center gap-1.5">
-          <Button
-            variant="outline"
-            size="icon"
-            title="Home"
-            disabled={pending}
-            onClick={() => navigate()}
-          >
-            <RiHome4Line />
-          </Button>
-          <Button
-            variant="outline"
-            size="icon"
-            title="Up one level"
-            disabled={pending || !listing?.parent}
-            onClick={() => listing?.parent && navigate(listing.parent)}
-          >
-            <RiCornerUpLeftLine />
-          </Button>
+          <ActionTooltip label="Home">
+            <Button
+              variant="outline"
+              size="icon"
+              disabled={pending}
+              onClick={() => navigate()}
+            >
+              <RiHome4Line />
+            </Button>
+          </ActionTooltip>
+          <ActionTooltip label="Up one level">
+            <Button
+              variant="outline"
+              size="icon"
+              disabled={pending || !listing?.parent}
+              onClick={() => listing?.parent && navigate(listing.parent)}
+            >
+              <RiCornerUpLeftLine />
+            </Button>
+          </ActionTooltip>
           <Input
             readOnly
             value={listing?.path ?? ""}

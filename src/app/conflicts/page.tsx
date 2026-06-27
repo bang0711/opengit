@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { ConflictResolver } from "@/components/workspace/conflict-resolver";
 import { getValidActiveRepoPath } from "@/lib/active-repo";
 import { getMergeState } from "@/lib/git";
+import { Notice } from "./notice";
 
 export const dynamic = "force-dynamic";
 
@@ -33,13 +34,5 @@ export default async function ConflictsPage() {
 
   return (
     <ConflictResolver files={state.conflicted} inRebase={state.inRebase} />
-  );
-}
-
-function Notice({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="flex h-screen flex-col items-center justify-center gap-3 bg-background text-sm text-muted-foreground">
-      {children}
-    </div>
   );
 }

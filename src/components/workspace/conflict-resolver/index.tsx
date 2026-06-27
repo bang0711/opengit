@@ -105,8 +105,8 @@ export function ConflictResolver({
         </div>
       ) : (
         <div className="flex min-h-0 flex-1">
-          <aside className="w-64 shrink-0 border-r border-border bg-sidebar">
-            <ScrollArea className="h-full">
+          <aside className="relative w-64 shrink-0 border-r border-border bg-sidebar">
+            <ScrollArea className="absolute inset-0">
               <div className="py-1 text-xs">
                 {files.map((f) => (
                   <button

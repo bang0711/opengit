@@ -118,7 +118,7 @@
 }
 
 /* ── Theme palettes ───────────────────────────────────────────────────────
- * Selected via next-themes `data-theme`. `.dark` stays on <html> for Tailwind
+ * Selected via the ThemeProvider's `data-theme`. `.dark` stays on <html> for Tailwind
  * `dark:` utilities; these only repaint the shadcn color vars. "default" has
  * no block — it inherits the `.dark` (zinc) palette above. Same specificity as
  * `.dark`, so source order (after) makes these win. */

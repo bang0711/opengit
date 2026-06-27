@@ -65,7 +65,7 @@ export function WorkingDiff({ file }: { file: string }) {
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex h-8 shrink-0 items-center gap-2 border-b border-border bg-card px-3 font-mono text-xs">
+      <div className="border-border bg-card flex h-8 shrink-0 items-center gap-2 border-b px-3 font-mono text-xs">
         <span className="truncate">{file}</span>
         {pending ? <RiLoader4Line className="size-3.5 animate-spin" /> : null}
         <div className="ml-auto flex items-center gap-1">
@@ -79,7 +79,7 @@ export function WorkingDiff({ file }: { file: string }) {
       </div>
 
       {error ? (
-        <p className="p-3 text-xs text-destructive">{error}</p>
+        <p className="text-destructive p-3 text-xs">{error}</p>
       ) : view === "split" ? (
         <SplitView patch={patch} file={file} />
       ) : (

@@ -1,5 +1,6 @@
 "use client";
 
+import { ActionTooltip } from "@/components/action-tooltip";
 import { cn } from "@/lib/utils";
 
 export function ToggleButton({
@@ -14,18 +15,19 @@ export function ToggleButton({
   children: React.ReactNode;
 }) {
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      title={title}
-      className={cn(
-        "flex items-center gap-1 px-2 py-0.5 text-[0.625rem] font-medium [&_svg]:size-3",
-        active
-          ? "bg-muted text-foreground"
-          : "text-muted-foreground hover:bg-muted/50",
-      )}
-    >
-      {children}
-    </button>
+    <ActionTooltip label={title}>
+      <button
+        type="button"
+        onClick={onClick}
+        className={cn(
+          "flex items-center gap-1 px-2 py-0.5 text-[0.625rem] font-medium [&_svg]:size-3",
+          active
+            ? "bg-muted text-foreground"
+            : "text-muted-foreground hover:bg-muted/50",
+        )}
+      >
+        {children}
+      </button>
+    </ActionTooltip>
   );
 }

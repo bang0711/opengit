@@ -23,6 +23,7 @@ import {
   unstageAll,
   unstageFile,
 } from "@/app/actions";
+import { ActionTooltip } from "@/components/action-tooltip";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { NameDialog } from "@/components/name-dialog";
 import { Button } from "@/components/ui/button";
@@ -128,7 +129,6 @@ export function ChangesPanel({ files }: { files: FileStatus[] }) {
                 variant="ghost"
                 size="xs"
                 disabled={pending}
-                title="Discard all changes"
                 onClick={() => setDiscard({ kind: "all" })}
               >
                 <RiDeleteBinLine /> Discard all
@@ -193,16 +193,17 @@ export function ChangesPanel({ files }: { files: FileStatus[] }) {
             Commit {staged.length > 0 ? `${staged.length} file(s)` : ""}
           </Button>
           <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                size="icon-lg"
-                disabled={pending}
-                title="Commit options"
-                className="rounded-l-none border-l border-primary-foreground/20"
-              >
-                <RiArrowDownSLine />
-              </Button>
-            </DropdownMenuTrigger>
+            <ActionTooltip label="Commit options">
+              <DropdownMenuTrigger asChild>
+                <Button
+                  size="icon-lg"
+                  disabled={pending}
+                  className="rounded-l-none border-l border-primary-foreground/20"
+                >
+                  <RiArrowDownSLine />
+                </Button>
+              </DropdownMenuTrigger>
+            </ActionTooltip>
             <DropdownMenuContent align="end" className="w-56">
               <DropdownMenuItem
                 onSelect={() =>

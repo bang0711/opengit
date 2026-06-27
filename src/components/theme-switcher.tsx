@@ -1,7 +1,8 @@
 "use client";
 
 import { RiCheckLine, RiPaletteLine } from "@remixicon/react";
-import { useTheme } from "next-themes";
+import { ActionTooltip } from "@/components/action-tooltip";
+import { useTheme } from "@/components/theme-provider";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -16,11 +17,13 @@ export function ThemeSwitcher() {
   const { theme, setTheme } = useTheme();
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" title="Theme">
-          <RiPaletteLine />
-        </Button>
-      </DropdownMenuTrigger>
+      <ActionTooltip label="Theme">
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" size="icon">
+            <RiPaletteLine />
+          </Button>
+        </DropdownMenuTrigger>
+      </ActionTooltip>
       <DropdownMenuContent align="end" className="w-44">
         <DropdownMenuLabel>Theme</DropdownMenuLabel>
         {THEMES.map((t) => (

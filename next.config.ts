@@ -7,6 +7,7 @@ const nextConfig: NextConfig = {
   // Don't bundle sharp for image optimization — it ships libvips (LGPL-3.0) and
   // this app has no need for next/image optimization. Keeps the bundle MIT-ish.
   images: { unoptimized: true },
+  devIndicators: false,
 };
 
 export default nextConfig;

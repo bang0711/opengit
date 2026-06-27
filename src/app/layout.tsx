@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Public_Sans, Roboto } from "next/font/google";
+import { cookies } from "next/headers";
 import "./globals.css";
 // Only Prism's `.token.*` color rules apply — we render highlighted spans into
 // the diff cells, not Prism's own code wrapper. App is always dark.
@@ -7,6 +8,7 @@ import "prismjs/themes/prism-tomorrow.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { DEFAULT_THEME, THEME_COOKIE, THEME_IDS } from "@/lib/themes";
 import { cn } from "@/lib/utils";
 
 const robotoHeading = Roboto({
@@ -31,14 +33,17 @@ export const metadata: Metadata = {
   description: "A Git client for the web",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const saved = (await cookies()).get(THEME_COOKIE)?.value;
+  const theme = saved && THEME_IDS.includes(saved) ? saved : DEFAULT_THEME;
   return (
     <html
       lang="en"
+      data-theme={theme}
       suppressHydrationWarning
       className={cn(
         "dark h-full",
@@ -51,9 +56,9 @@ export default function RootLayout({
       )}
     >
       <body className="flex min-h-full flex-col overflow-hidden">
-        <ThemeProvider>
+        <ThemeProvider initialTheme={theme}>
           <TooltipProvider delayDuration={300}>{children}</TooltipProvider>
-          <Toaster position="bottom-right" duration={1000} />
+          <Toaster position="bottom-right" duration={2000} />
         </ThemeProvider>
       </body>
     </html>

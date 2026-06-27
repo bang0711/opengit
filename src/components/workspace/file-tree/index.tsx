@@ -8,11 +8,14 @@ export function FileTree({
   sha,
   selected,
   wt,
+  onSelect,
 }: {
   nodes: TreeNode[];
   sha?: string;
   selected: string | null;
   wt?: boolean;
+  // When provided, file rows call this instead of navigating (client switching).
+  onSelect?: (path: string) => void;
 }) {
   return (
     <div className="flex flex-col py-1 text-xs">
@@ -23,6 +26,7 @@ export function FileTree({
           sha={sha}
           selected={selected}
           wt={wt}
+          onSelect={onSelect}
           depth={0}
         />
       ))}

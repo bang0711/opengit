@@ -19,6 +19,7 @@ import {
   mergeBranch,
   renameBranch,
 } from "@/app/actions";
+import { ActionTooltip } from "@/components/action-tooltip";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { Button } from "@/components/ui/button";
 import {
@@ -213,16 +214,17 @@ export function BranchRow({
             </button>
 
             <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon-xs"
-                  className="shrink-0 opacity-0 group-hover/branch:opacity-100 data-[state=open]:opacity-100"
-                  title="Branch actions"
-                >
-                  <RiMore2Line />
-                </Button>
-              </DropdownMenuTrigger>
+              <ActionTooltip label="Branch actions">
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon-xs"
+                    className="shrink-0 opacity-0 group-hover/branch:opacity-100 data-[state=open]:opacity-100"
+                  >
+                    <RiMore2Line />
+                  </Button>
+                </DropdownMenuTrigger>
+              </ActionTooltip>
               <DropdownMenuContent align="end" className="w-48">
                 {actions.map((a) => (
                   <Fragment key={a.key}>

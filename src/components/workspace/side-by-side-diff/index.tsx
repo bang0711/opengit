@@ -48,12 +48,12 @@ export function SideBySideDiff({
   };
 
   return (
-    <div className="flex h-full flex-col font-mono text-xs">
+    <div className="flex min-h-0 flex-1 flex-col font-mono text-xs">
       <div
-        className="bg-muted/40 text-muted-foreground sticky top-0 z-10 grid border-b border-border"
+        className="bg-muted/40 text-muted-foreground border-border sticky top-0 z-10 grid border-b"
         style={cols}
       >
-        <div className="flex items-center gap-1 border-border border-r px-3 py-0.5">
+        <div className="border-border flex items-center gap-1 border-r px-3 py-0.5">
           <span className="truncate font-sans font-semibold" title={oldLabel}>
             {oldLabel}
           </span>
@@ -72,7 +72,7 @@ export function SideBySideDiff({
       </div>
 
       <div ref={wrapRef} className="relative min-h-0 flex-1">
-        <ScrollArea className="h-full">
+        <ScrollArea className="inset-0 h-full">
           <div>
             <DiffRows rows={rows} cols={cols} lang={lang} />
           </div>
@@ -84,7 +84,7 @@ export function SideBySideDiff({
           aria-label="Resize diff columns"
           onPointerDown={startDrag}
           style={{ left: `${leftPct}%` }}
-          className="absolute top-0 bottom-0 -ml-1 w-2 cursor-col-resize hover:bg-primary/30"
+          className="hover:bg-primary/30 absolute top-0 bottom-0 -ml-1 w-2 cursor-col-resize"
         />
       </div>
     </div>
