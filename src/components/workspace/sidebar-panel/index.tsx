@@ -18,9 +18,9 @@ import type { Branch, Remote, Stash, Tag } from "@/lib/git";
 import { notify } from "@/lib/notify";
 import { BranchRow, ICON } from "./branch-row";
 import { NewRemoteBranchDialog } from "./new-remote-branch-dialog";
-import { Row } from "./row";
 import { Section } from "./section";
 import { StashRow } from "./stash-row";
+import { TagRow } from "./tag-row";
 
 type Props = {
   branches: Branch[];
@@ -169,13 +169,7 @@ export function SidebarPanel({ branches, remotes, tags, stashes }: Props) {
 
           <Section icon={<RiPriceTag3Line />} label="Tags" count={tags.length}>
             {tags.map((t) => (
-              <Row key={t.name}>
-                <RiPriceTag3Line className="size-3.5 shrink-0 text-muted-foreground" />
-                <span className="truncate">{t.name}</span>
-                <span className="ml-auto font-mono text-[0.625rem] text-muted-foreground">
-                  {t.sha}
-                </span>
-              </Row>
+              <TagRow key={t.name} tag={t} />
             ))}
           </Section>
 

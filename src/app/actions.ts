@@ -356,6 +356,10 @@ export async function createTagAt(
   return gitAction(["tag", name, sha]);
 }
 
+export async function deleteTag(name: string): Promise<ActionState> {
+  return gitAction(["tag", "-d", name]);
+}
+
 // ── Conflict resolution ─────────────────────────────────────────────────────
 
 /** Run arbitrary repo work under the repo lock, then revalidate every route. */
