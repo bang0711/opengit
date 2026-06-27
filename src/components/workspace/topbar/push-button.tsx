@@ -55,7 +55,10 @@ export function PushButton({
             )}
             Push
             {ahead ? (
-              <Badge variant="secondary" className="ml-0.5">
+              <Badge
+                variant="default"
+                className="ml-0.5 h-4 min-w-4 px-1 text-[0.5625rem]"
+              >
                 {ahead}
               </Badge>
             ) : null}
@@ -65,6 +68,7 @@ export function PushButton({
           {hasUpstream ? "Push to upstream" : "Push and set upstream"}
         </TooltipContent>
       </Tooltip>
+
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button

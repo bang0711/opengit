@@ -101,7 +101,10 @@ export function PullButton({
             )}
             Pull
             {behind ? (
-              <Badge variant="secondary" className="ml-0.5">
+              <Badge
+                variant="default"
+                className="ml-0.5 h-4 min-w-4 px-1 text-[0.5625rem]"
+              >
                 {behind}
               </Badge>
             ) : null}
