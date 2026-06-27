@@ -19,7 +19,7 @@ import {
   mergeBranch,
 } from "@/app/actions";
 import { GitLogo } from "@/components/git-logo";
-import { ThemeSwitcher } from "@/components/theme-switcher";
+import { useRouter } from "@/lib/router";
 import { UpdateChecker } from "@/components/update-checker";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -50,7 +50,12 @@ export function Topbar({ repo, current, branches }: Props) {
     });
   };
 
-  const close = () => startTransition(() => closeRepo());
+  const router = useRouter();
+  const close = () =>
+    startTransition(async () => {
+      await closeRepo();
+      router.refresh();
+    });
 
   const ahead = current?.ahead ?? 0;
   const behind = current?.behind ?? 0;
@@ -120,7 +125,6 @@ export function Topbar({ repo, current, branches }: Props) {
         <Separator orientation="vertical" className="mx-1 !h-5" />
 
         <UpdateChecker />
-        <ThemeSwitcher />
 
         <Tooltip>
           <TooltipTrigger asChild>

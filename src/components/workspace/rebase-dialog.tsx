@@ -1,7 +1,7 @@
 "use client";
 
 import { RiLoader4Line } from "@remixicon/react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/lib/router";
 import { useEffect, useState, useTransition } from "react";
 import { interactiveRebase, type RebaseOp, rebaseCommits } from "@/app/actions";
 import { Button } from "@/components/ui/button";

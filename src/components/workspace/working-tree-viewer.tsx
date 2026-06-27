@@ -1,7 +1,7 @@
 "use client";
 
 import { RiArrowLeftLine } from "@remixicon/react";
-import Link from "next/link";
+import Link from "@/lib/link";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {

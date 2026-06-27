@@ -1,7 +1,7 @@
 "use client";
 
 import { RiArrowLeftLine, RiGitCommitLine } from "@remixicon/react";
-import Link from "next/link";
+import Link from "@/lib/link";
 import { useEffect, useRef, useState } from "react";
 import { commitFileDiff } from "@/app/actions";
 import { Button } from "@/components/ui/button";

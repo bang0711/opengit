@@ -1,8 +1,8 @@
 "use client";
 
 import { RiHistoryLine, RiLoader4Line } from "@remixicon/react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+import Link from "@/lib/link";
+import { useRouter } from "@/lib/router";
 import { useEffect, useState, useTransition } from "react";
 import {
   fileHunkDiffs,

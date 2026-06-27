@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/lib/link";
 import { FileIcon } from "@/components/shared/file-icon";
 import { statusColor } from "@/components/shared/file-status";
 import type { CommitFile } from "@/lib/git";

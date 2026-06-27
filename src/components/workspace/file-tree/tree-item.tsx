@@ -5,7 +5,7 @@ import {
   RiArrowRightSLine,
   RiFolder3Line,
 } from "@remixicon/react";
-import Link from "next/link";
+import Link from "@/lib/link";
 import { FileIcon } from "@/components/shared/file-icon";
 import { usePersistedState } from "@/hooks/use-persisted-state";
 import type { TreeNode } from "@/lib/file-tree";

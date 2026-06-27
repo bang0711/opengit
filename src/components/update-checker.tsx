@@ -12,7 +12,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import type { UpdaterEvent } from "@/types/electron";
+import type { UpdaterEvent } from "@shared/types";
 
 type Status =
   | "checking"

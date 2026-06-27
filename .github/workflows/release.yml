@@ -9,13 +9,24 @@ on:
       - "v*"
 
 jobs:
+  # Gate: typecheck + tests must pass before any installer is built.
+  test:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+      - run: bun run typecheck
+      - run: bun run test
+
   release:
+    needs: test # only build/publish if tests passed
     permissions:
       contents: write # electron-builder needs to create/upload the release
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest, macos-latest, ubuntu-latest]
+        os: [windows-latest, macos-latest, ubuntu-22.04]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -36,7 +47,7 @@ jobs:
   # so users never see a partial release.
   publish:
     needs: release
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     permissions:
       contents: write
     steps:

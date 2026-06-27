@@ -1,7 +1,7 @@
 "use client";
 
 import { RiAlertLine } from "@remixicon/react";
-import Link from "next/link";
+import Link from "@/lib/link";
 import { Button } from "@/components/ui/button";
 import {
   ResizableHandle,

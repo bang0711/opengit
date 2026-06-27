@@ -27,7 +27,8 @@ export function TagRow({ tag }: { tag: Tag }) {
       .finally(() => setPending(false));
   };
 
-  const onDelete = () => run(() => deleteTag(tag.name), `Deleted tag ${tag.name}`);
+  const onDelete = () =>
+    run(() => deleteTag(tag.name), `Deleted tag ${tag.name}`);
   const onDeleteRemote = () =>
     run(() => deleteRemoteTag(tag.name), `Deleted ${tag.name} from origin`);
 
@@ -78,4 +79,3 @@ export function TagRow({ tag }: { tag: Tag }) {
     </ContextMenu>
   );
 }
-

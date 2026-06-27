@@ -1,35 +1,20 @@
-"use client";
-
-import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import { useRevalidator } from "react-router-dom";
 
 /**
- * Keep the page's server-component data in sync with on-disk repo state.
- *
- * Event-driven: the server watches the repo (fs.watch) and pushes a debounced
- * "change" over SSE (`/api/watch`); we refresh on it. No polling. Focus /
- * visibility refresh is kept as a cheap fallback for the gaps the watcher can't
- * cover (e.g. Linux, where recursive fs.watch is unsupported, or a missed
- * event while the tab was hidden). `repoPath` re-subscribes on repo switch.
+ * Re-fetch route data when the active repo changes. The main process watches
+ * the repo (chokidar) and pushes a debounced "repo:changed" over IPC; we
+ * revalidate on it, plus on window focus as a cheap fallback.
  */
-export function useAutoRefresh(repoPath?: string) {
-  const router = useRouter();
-  // biome-ignore lint/correctness/useExhaustiveDependencies: repoPath re-subscribes the watcher on repo switch
+export function useAutoRefresh(_repoPath?: string) {
+  const { revalidate } = useRevalidator();
   useEffect(() => {
-    const refresh = () =>
-      document.visibilityState === "visible" && router.refresh();
-
-    const es = new EventSource("/api/watch");
-    es.onmessage = (e) => {
-      if (e.data === "change") refresh();
-    };
-
-    window.addEventListener("focus", refresh);
-    document.addEventListener("visibilitychange", refresh);
+    const off = window.api.onRepoChange(() => revalidate());
+    const onFocus = () => revalidate();
+    window.addEventListener("focus", onFocus);
     return () => {
-      es.close();
-      window.removeEventListener("focus", refresh);
-      document.removeEventListener("visibilitychange", refresh);
+      off();
+      window.removeEventListener("focus", onFocus);
     };
-  }, [router, repoPath]);
+  }, [revalidate]);
 }

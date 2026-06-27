@@ -1,23 +1,26 @@
 {
   "name": "OpenGit",
-  "version": "1.1.0",
+  "version": "2.0.0",
   "private": true,
   "description": "A git client desktop app",
   "author": "Chau Chan Bang <chau.chan.bang@pwc.com>",
   "license": "MIT",
-  "main": "electron/main.cjs",
+  "main": "out/main/index.js",
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
+    "dev": "electron-vite dev",
+    "build": "electron-vite build",
+    "preview": "electron-vite preview",
+    "typecheck": "tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "lint": "biome check",
     "format": "biome format --write",
     "icons": "node scripts/generate-icons.mjs",
     "licenses": "generate-license-file --input package.json --output THIRD-PARTY-NOTICES.txt --overwrite",
     "release": "node scripts/release.mjs",
-    "electron:dev": "concurrently -k -n NEXT,ELECTRON -c yellow,blue \"next dev\" \"electron .\"",
-    "electron:build": "node scripts/generate-icons.mjs && bun run licenses && next build && node scripts/prepare-standalone.mjs && electron-builder",
-    "electron:publish": "node scripts/generate-icons.mjs && bun run licenses && next build && node scripts/prepare-standalone.mjs && electron-builder --publish always"
+    "electron:dev": "electron-vite dev",
+    "electron:build": "node scripts/generate-icons.mjs && bun run licenses && electron-vite build && electron-builder",
+    "electron:publish": "node scripts/generate-icons.mjs && bun run licenses && electron-vite build && electron-builder --publish always"
   },
   "build": {
     "appId": "com.opengit.desktop",
@@ -26,11 +29,10 @@
       "output": "release",
       "buildResources": "build"
     },
-    "asar": false,
+    "asar": true,
     "electronLanguages": [
       "en-US"
     ],
-    "afterPack": "scripts/after-pack.cjs",
     "publish": [
       {
         "provider": "github",
@@ -39,15 +41,10 @@
       }
     ],
     "files": [
-      {
-        "from": ".",
-        "filter": [
-          "electron/**/*",
-          "package.json",
-          "THIRD-PARTY-NOTICES.txt",
-          "!**/*.map"
-        ]
-      }
+      "out/**/*",
+      "package.json",
+      "THIRD-PARTY-NOTICES.txt",
+      "!**/*.map"
     ],
     "win": {
       "target": [
@@ -69,31 +66,40 @@
       "artifactName": "OpenGit-${version}-portable.${ext}"
     },
     "mac": {
-      "target": "dmg"
+      "target": "dmg",
+      "icon": "build/icon.png"
     },
     "linux": {
-      "target": "AppImage"
+      "target": "AppImage",
+      "icon": "build/icon.png"
     }
   },
+  "trustedDependencies": [
+    "electron",
+    "electron-winstaller",
+    "esbuild",
+    "sharp"
+  ],
   "dependencies": {
     "electron-updater": "^6.8.9"
   },
   "devDependencies": {
     "@biomejs/biome": "2.2.0",
     "@remixicon/react": "^4.9.0",
-    "@tailwindcss/postcss": "^4",
+    "@tailwindcss/vite": "^4.3.1",
     "@types/node": "^20",
     "@types/prismjs": "^1.26.6",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@vitejs/plugin-react": "^6.0.3",
+    "chokidar": "^5.0.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "concurrently": "^10.0.3",
     "electron": "^42.5.0",
     "electron-builder": "^26.15.3",
+    "electron-vite": "^5.0.0",
     "generate-license-file": "^4.2.1",
     "material-file-icons": "^2.4.0",
-    "next": "16.2.9",
     "prettier": "^3.8.4",
     "prettier-plugin-tailwindcss": "^0.8.0",
     "prismjs": "^1.30.0",
@@ -101,20 +107,15 @@
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "react-resizable-panels": "^4.11.2",
-    "server-only": "^0.0.1",
+    "react-router-dom": "^7.18.0",
     "shadcn": "^4.11.0",
+    "sharp": "^0.35.2",
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.6.0",
     "tailwindcss": "^4",
     "tw-animate-css": "^1.4.0",
-    "typescript": "^5"
-  },
-  "ignoreScripts": [
-    "sharp",
-    "unrs-resolver"
-  ],
-  "trustedDependencies": [
-    "sharp",
-    "unrs-resolver"
-  ]
+    "typescript": "^5",
+    "vite": "^8.1.0",
+    "vitest": "^4.1.9"
+  }
 }

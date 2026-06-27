@@ -7,8 +7,8 @@ import {
   RiFileTextLine,
   RiSubtractLine,
 } from "@remixicon/react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+import Link from "@/lib/link";
+import { useRouter } from "@/lib/router";
 import { toast } from "sonner";
 import { ActionTooltip } from "@/components/action-tooltip";
 import { DiffStat } from "@/components/shared/diff-stat";

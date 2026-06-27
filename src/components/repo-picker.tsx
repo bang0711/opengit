@@ -1,12 +1,10 @@
-"use client";
-
 import {
   RiDownloadCloud2Line,
   RiFolderOpenLine,
   RiGitRepositoryLine,
   RiLoader4Line,
 } from "@remixicon/react";
-import { useActionState, useState } from "react";
+import { useState } from "react";
 import { cloneRepo, openRepo } from "@/app/actions";
 import { FolderPicker } from "@/components/folder-picker";
 import { GitLogo } from "@/components/git-logo";
@@ -21,15 +19,40 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useRouter } from "@/lib/router";
 
 export function RepoPicker({ recent }: { recent: string[] }) {
-  const [openState, openAction, opening] = useActionState(openRepo, {});
-  const [cloneState, cloneAction, cloning] = useActionState(cloneRepo, {});
+  const router = useRouter();
   const [path, setPath] = useState("");
+  const [url, setUrl] = useState("");
   const [directory, setDirectory] = useState("");
+  const [opening, setOpening] = useState(false);
+  const [cloning, setCloning] = useState(false);
+  const [openError, setOpenError] = useState<string>();
+  const [cloneError, setCloneError] = useState<string>();
+
+  const doOpen = async (p: string) => {
+    if (opening) return;
+    setOpening(true);
+    setOpenError(undefined);
+    const r = await openRepo(p);
+    setOpening(false);
+    if (r.error) setOpenError(r.error);
+    else router.push("/");
+  };
+
+  const doClone = async () => {
+    if (cloning) return;
+    setCloning(true);
+    setCloneError(undefined);
+    const r = await cloneRepo(url, directory);
+    setCloning(false);
+    if (r.error) setCloneError(r.error);
+    else router.push("/");
+  };
 
   return (
-    <div className="flex flex-1 items-center justify-center bg-background p-6">
+    <div className="bg-background flex h-full flex-1 items-center justify-center p-6">
       <Card className="w-full max-w-lg">
         <CardHeader>
           <div className="flex items-center gap-2">
@@ -52,13 +75,18 @@ export function RepoPicker({ recent }: { recent: string[] }) {
             </TabsList>
 
             <TabsContent value="open" className="mt-4">
-              <form action={openAction} className="flex flex-col gap-3">
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  doOpen(path);
+                }}
+                className="flex flex-col gap-3"
+              >
                 <div className="flex flex-col gap-1.5">
                   <Label htmlFor="open-path">Repository folder</Label>
                   <div className="flex gap-2">
                     <Input
                       id="open-path"
-                      name="path"
                       value={path}
                       readOnly
                       placeholder="No folder selected"
@@ -76,8 +104,8 @@ export function RepoPicker({ recent }: { recent: string[] }) {
                     </FolderPicker>
                   </div>
                 </div>
-                {openState.error ? (
-                  <p className="text-xs text-destructive">{openState.error}</p>
+                {openError ? (
+                  <p className="text-destructive text-xs">{openError}</p>
                 ) : null}
                 <Button type="submit" size="lg" disabled={opening || !path}>
                   {opening ? (
@@ -91,12 +119,19 @@ export function RepoPicker({ recent }: { recent: string[] }) {
             </TabsContent>
 
             <TabsContent value="clone" className="mt-4">
-              <form action={cloneAction} className="flex flex-col gap-3">
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  doClone();
+                }}
+                className="flex flex-col gap-3"
+              >
                 <div className="flex flex-col gap-1.5">
                   <Label htmlFor="clone-url">Remote URL</Label>
                   <Input
                     id="clone-url"
-                    name="url"
+                    value={url}
+                    onChange={(e) => setUrl(e.target.value)}
                     placeholder="https://github.com/user/repo.git"
                     autoComplete="off"
                     spellCheck={false}
@@ -108,7 +143,6 @@ export function RepoPicker({ recent }: { recent: string[] }) {
                   <div className="flex gap-2">
                     <Input
                       id="clone-dir"
-                      name="directory"
                       value={directory}
                       readOnly
                       placeholder="No folder selected"
@@ -126,13 +160,13 @@ export function RepoPicker({ recent }: { recent: string[] }) {
                     </FolderPicker>
                   </div>
                 </div>
-                {cloneState.error ? (
-                  <p className="text-xs text-destructive">{cloneState.error}</p>
+                {cloneError ? (
+                  <p className="text-destructive text-xs">{cloneError}</p>
                 ) : null}
                 <Button
                   type="submit"
                   size="lg"
-                  disabled={cloning || !directory}
+                  disabled={cloning || !directory || !url}
                 >
                   {cloning ? (
                     <RiLoader4Line className="animate-spin" />
@@ -147,21 +181,20 @@ export function RepoPicker({ recent }: { recent: string[] }) {
 
           {recent.length > 0 ? (
             <div className="mt-6">
-              <p className="mb-2 text-xs font-medium text-muted-foreground">
+              <p className="text-muted-foreground mb-2 text-xs font-medium">
                 Recent
               </p>
               <div className="flex flex-col gap-1">
                 {recent.map((recentPath) => (
-                  <form key={recentPath} action={openAction}>
-                    <input type="hidden" name="path" value={recentPath} />
-                    <button
-                      type="submit"
-                      className="flex w-full items-center gap-2 truncate rounded-md px-2 py-1.5 text-left text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-                    >
-                      <RiGitRepositoryLine className="size-3.5 shrink-0" />
-                      <span className="truncate">{recentPath}</span>
-                    </button>
-                  </form>
+                  <button
+                    key={recentPath}
+                    type="button"
+                    onClick={() => doOpen(recentPath)}
+                    className="text-muted-foreground hover:bg-muted hover:text-foreground flex w-full items-center gap-2 truncate rounded-md px-2 py-1.5 text-left text-xs transition-colors"
+                  >
+                    <RiGitRepositoryLine className="size-3.5 shrink-0" />
+                    <span className="truncate">{recentPath}</span>
+                  </button>
                 ))}
               </div>
             </div>

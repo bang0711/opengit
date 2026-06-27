@@ -45,6 +45,7 @@ next-env.d.ts
 .codegraph
 .mcp.json
 .agents
+
 # electron build output
 /dist
 /release
