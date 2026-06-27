@@ -17,6 +17,10 @@ const updater = {
   check: () => ipcRenderer.invoke("updater:check"),
   download: () => ipcRenderer.invoke("updater:download"),
   install: () => ipcRenderer.invoke("updater:install"),
+  listReleases: () => ipcRenderer.invoke("updater:releases"),
+  openDownload: (url: string) => ipcRenderer.invoke("updater:openDownload", url),
+  downloadVersion: (url: string) =>
+    ipcRenderer.invoke("updater:downloadVersion", url),
   onEvent: (cb: (e: unknown) => void) => {
     const handler = (_e: unknown, payload: unknown) => cb(payload);
     ipcRenderer.on("updater:event", handler);

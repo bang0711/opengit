@@ -129,7 +129,11 @@ export type UpdaterEvent =
   | { type: "not-available" }
   | { type: "progress"; percent: number }
   | { type: "downloaded"; version: string }
-  | { type: "error"; message: string };
+  | { type: "error"; message: string }
+  // Version-picker flow (download + launch a chosen release).
+  | { type: "picker-progress"; percent: number }
+  | { type: "picker-launched" }
+  | { type: "picker-error"; message: string };
 
 type Diff = { diff: string };
 type Err = { error: string };
@@ -199,9 +203,24 @@ export interface Api {
   onRepoChange(cb: () => void): () => void;
 }
 
+export type Release = {
+  version: string; // e.g. "2.0.0"
+  tag: string; // e.g. "v2.0.0"
+  assetUrl: string | null; // installer download for this OS, or null
+  pageUrl: string; // GitHub release page (fallback)
+  prerelease: boolean;
+  current: boolean; // matches the running app version
+};
+
 export interface Updater {
   check(): Promise<void>;
   download(): Promise<void>;
   install(): Promise<void>;
   onEvent(cb: (e: UpdaterEvent) => void): () => void;
+  /** All published releases with this OS's installer asset (newest first). */
+  listReleases(): Promise<Release[]>;
+  /** Open a download URL in the OS browser (fallback when no installer asset). */
+  openDownload(url: string): Promise<void>;
+  /** Download a release's installer and launch it (progress via onEvent). */
+  downloadVersion(url: string): Promise<void>;
 }

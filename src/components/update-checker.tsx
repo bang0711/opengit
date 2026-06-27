@@ -1,8 +1,6 @@
-"use client";
-
-import { RiLoader4Line, RiRefreshLine } from "@remixicon/react";
+import { RiDownloadCloud2Line, RiLoader4Line } from "@remixicon/react";
 import { useEffect, useState } from "react";
-import { ActionTooltip } from "@/components/action-tooltip";
+import type { Release, UpdaterEvent } from "@shared/types";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -12,7 +10,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import type { UpdaterEvent } from "@shared/types";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 type Status =
   | "checking"
@@ -23,7 +27,6 @@ type Status =
   | "error";
 
 export function UpdateChecker() {
-  // window.updater exists only inside Electron; render nothing in a browser.
   const [ready, setReady] = useState(false);
   const [open, setOpen] = useState(false);
   const [status, setStatus] = useState<Status>("checking");
@@ -31,6 +34,13 @@ export function UpdateChecker() {
   const [percent, setPercent] = useState(0);
   const [error, setError] = useState<string>();
   const [hasUpdate, setHasUpdate] = useState(false);
+  const [releases, setReleases] = useState<Release[]>([]);
+  const [selectedTag, setSelectedTag] = useState<string>();
+  const [pickerStatus, setPickerStatus] = useState<
+    "idle" | "downloading" | "launched" | "error"
+  >("idle");
+  const [pickerPercent, setPickerPercent] = useState(0);
+  const [pickerError, setPickerError] = useState<string>();
 
   useEffect(() => {
     if (typeof window === "undefined" || !window.updater) return;
@@ -58,9 +68,31 @@ export function UpdateChecker() {
           setError(e.message);
           setStatus("error");
           break;
+        case "picker-progress":
+          setPickerStatus("downloading");
+          setPickerPercent(e.percent);
+          break;
+        case "picker-launched":
+          setPickerStatus("launched");
+          break;
+        case "picker-error":
+          setPickerStatus("error");
+          setPickerError(e.message);
+          break;
       }
     });
   }, []);
+
+  // Load the release list whenever the dialog opens.
+  useEffect(() => {
+    if (!open || !window.updater) return;
+    setPickerStatus("idle");
+    window.updater.listReleases().then((rs) => {
+      setReleases(rs);
+      const def = rs.find((r) => !r.current) ?? rs[0];
+      setSelectedTag((cur) => cur ?? def?.tag);
+    });
+  }, [open]);
 
   if (!ready) return null;
 
@@ -69,6 +101,20 @@ export function UpdateChecker() {
     setStatus("checking");
     setOpen(true);
     window.updater?.check();
+  };
+
+  const downloadSelected = () => {
+    const rel = releases.find((r) => r.tag === selectedTag);
+    if (!rel) return;
+    if (rel.assetUrl) {
+      setPickerStatus("downloading");
+      setPickerPercent(0);
+      setPickerError(undefined);
+      window.updater?.downloadVersion(rel.assetUrl);
+    } else {
+      // No installer for this OS — open the release page in the browser.
+      window.updater?.openDownload(rel.pageUrl);
+    }
   };
 
   const description = {
@@ -82,19 +128,18 @@ export function UpdateChecker() {
 
   return (
     <>
-      <ActionTooltip label="Check for updates">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={check}
-          className="relative"
-        >
-          <RiRefreshLine />
-          {hasUpdate ? (
-            <span className="bg-primary absolute top-1 right-1 size-1.5 rounded-full" />
-          ) : null}
-        </Button>
-      </ActionTooltip>
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={check}
+        className="relative"
+      >
+        <RiDownloadCloud2Line />
+        Versions
+        {hasUpdate ? (
+          <span className="absolute right-0.5 top-0.5 size-1.5 rounded-full bg-primary" />
+        ) : null}
+      </Button>
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-sm">
@@ -104,11 +149,67 @@ export function UpdateChecker() {
           </DialogHeader>
 
           {status === "downloading" ? (
-            <div className="bg-muted h-1.5 w-full overflow-hidden rounded-full">
+            <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
               <div
-                className="bg-primary h-full transition-all"
+                className="h-full bg-primary transition-all"
                 style={{ width: `${percent}%` }}
               />
+            </div>
+          ) : null}
+
+          {/* Pick + install any published version (downloads + launches it). */}
+          {releases.length > 0 ? (
+            <div className="space-y-2 border-t border-border pt-3">
+              <p className="text-xs text-muted-foreground">
+                Or install a specific version
+              </p>
+
+              {pickerStatus === "downloading" ? (
+                <div className="space-y-1.5">
+                  <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                    <div
+                      className="h-full bg-primary transition-all"
+                      style={{ width: `${pickerPercent}%` }}
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Downloading… {pickerPercent}%
+                  </p>
+                </div>
+              ) : pickerStatus === "launched" ? (
+                <p className="text-xs text-muted-foreground">
+                  Installer launched — follow its prompts to finish.
+                </p>
+              ) : pickerStatus === "error" ? (
+                <p className="text-xs text-destructive">
+                  {pickerError ?? "Download failed."}
+                </p>
+              ) : (
+                <div className="flex gap-2">
+                  <Select value={selectedTag} onValueChange={setSelectedTag}>
+                    <SelectTrigger className="flex-1">
+                      <SelectValue placeholder="Version" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {releases.map((r) => (
+                        <SelectItem key={r.tag} value={r.tag}>
+                          {r.tag}
+                          {r.current ? " · current" : ""}
+                          {r.prerelease ? " · pre" : ""}
+                          {!r.assetUrl ? " · page" : ""}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Button
+                    variant="outline"
+                    onClick={downloadSelected}
+                    disabled={!selectedTag}
+                  >
+                    Install
+                  </Button>
+                </div>
+              )}
             </div>
           ) : null}
 
