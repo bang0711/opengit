@@ -360,6 +360,11 @@ export async function deleteTag(name: string): Promise<ActionState> {
   return gitAction(["tag", "-d", name]);
 }
 
+/** Delete a tag from the remote (origin). */
+export async function deleteRemoteTag(name: string): Promise<ActionState> {
+  return gitAction(["push", "origin", `:refs/tags/${name}`]);
+}
+
 // ── Conflict resolution ─────────────────────────────────────────────────────
 
 /** Run arbitrary repo work under the repo lock, then revalidate every route. */
