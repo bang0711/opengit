@@ -8,6 +8,7 @@ import {
   ResizablePanel,
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
+import { useAutoRefresh } from "@/hooks/use-auto-refresh";
 import { usePersistedState } from "@/hooks/use-persisted-state";
 import type {
   Branch,
@@ -37,6 +38,7 @@ export type WorkspaceData = {
 };
 
 export function Workspace(data: WorkspaceData) {
+  useAutoRefresh();
   const current = data.branches.find((b) => b.isCurrent) ?? null;
   const [selected, setSelected] = usePersistedState<string | null>(
     `opengit.commit:${data.repo.path}`,

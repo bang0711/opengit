@@ -3,10 +3,10 @@
 import {
   RiArrowDownSLine,
   RiArrowRightSLine,
-  RiFileLine,
   RiFolder3Line,
 } from "@remixicon/react";
 import Link from "next/link";
+import { FileIcon } from "@/components/shared/file-icon";
 import { usePersistedState } from "@/hooks/use-persisted-state";
 import type { TreeNode } from "@/lib/file-tree";
 import { cn } from "@/lib/utils";
@@ -78,7 +78,7 @@ export function TreeItem({
           : "hover:bg-muted/60 text-muted-foreground",
       )}
     >
-      <RiFileLine className="size-3.5 shrink-0 opacity-70" />
+      <FileIcon name={node.name} />
       <span className="truncate">{node.name}</span>
       <Stat file={node.file} />
     </Link>

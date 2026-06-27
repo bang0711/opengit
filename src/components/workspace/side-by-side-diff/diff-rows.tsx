@@ -4,15 +4,17 @@ import { Row } from "./row";
 export function DiffRows({
   rows,
   cols,
+  lang,
 }: {
   rows: DiffRow[];
   cols: React.CSSProperties;
+  lang?: string;
 }) {
   // Manual key counter — rows are static and positional.
   const els: React.ReactNode[] = [];
   let k = 0;
   for (const row of rows) {
-    els.push(<Row key={`r${k++}`} row={row} cols={cols} />);
+    els.push(<Row key={`r${k++}`} row={row} cols={cols} lang={lang} />);
   }
   return <>{els}</>;
 }

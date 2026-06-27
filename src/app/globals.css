@@ -117,6 +117,156 @@
   --sidebar-ring: oklch(0.552 0.016 285.938);
 }
 
+/* ── Theme palettes ───────────────────────────────────────────────────────
+ * Selected via next-themes `data-theme`. `.dark` stays on <html> for Tailwind
+ * `dark:` utilities; these only repaint the shadcn color vars. "default" has
+ * no block — it inherits the `.dark` (zinc) palette above. Same specificity as
+ * `.dark`, so source order (after) makes these win. */
+
+[data-theme="gitkraken"] {
+  --background: #1b2b34;
+  --foreground: #e6edf3;
+  --card: #22343d;
+  --card-foreground: #e6edf3;
+  --popover: #22343d;
+  --popover-foreground: #e6edf3;
+  --primary: #1abc9c;
+  --primary-foreground: #06231d;
+  --secondary: #2d4450;
+  --secondary-foreground: #e6edf3;
+  --muted: #2d4450;
+  --muted-foreground: #8aa1ad;
+  --accent: #7b61ff;
+  --accent-foreground: #ffffff;
+  --destructive: #e74c3c;
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: #1abc9c;
+}
+
+[data-theme="dracula"] {
+  --background: #282a36;
+  --foreground: #f8f8f2;
+  --card: #343746;
+  --card-foreground: #f8f8f2;
+  --popover: #343746;
+  --popover-foreground: #f8f8f2;
+  --primary: #bd93f9;
+  --primary-foreground: #282a36;
+  --secondary: #44475a;
+  --secondary-foreground: #f8f8f2;
+  --muted: #44475a;
+  --muted-foreground: #9aa3c7;
+  --accent: #ff79c6;
+  --accent-foreground: #282a36;
+  --destructive: #ff5555;
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: #bd93f9;
+}
+
+[data-theme="catppuccin"] {
+  --background: #1e1e2e;
+  --foreground: #cdd6f4;
+  --card: #313244;
+  --card-foreground: #cdd6f4;
+  --popover: #313244;
+  --popover-foreground: #cdd6f4;
+  --primary: #cba6f7;
+  --primary-foreground: #1e1e2e;
+  --secondary: #45475a;
+  --secondary-foreground: #cdd6f4;
+  --muted: #45475a;
+  --muted-foreground: #a6adc8;
+  --accent: #89b4fa;
+  --accent-foreground: #1e1e2e;
+  --destructive: #f38ba8;
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: #cba6f7;
+}
+
+[data-theme="nord"] {
+  --background: #2e3440;
+  --foreground: #eceff4;
+  --card: #3b4252;
+  --card-foreground: #eceff4;
+  --popover: #3b4252;
+  --popover-foreground: #eceff4;
+  --primary: #88c0d0;
+  --primary-foreground: #2e3440;
+  --secondary: #434c5e;
+  --secondary-foreground: #eceff4;
+  --muted: #434c5e;
+  --muted-foreground: #9099a8;
+  --accent: #81a1c1;
+  --accent-foreground: #2e3440;
+  --destructive: #bf616a;
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: #88c0d0;
+}
+
+[data-theme="tokyo-night"] {
+  --background: #1a1b26;
+  --foreground: #c0caf5;
+  --card: #24283b;
+  --card-foreground: #c0caf5;
+  --popover: #24283b;
+  --popover-foreground: #c0caf5;
+  --primary: #7aa2f7;
+  --primary-foreground: #1a1b26;
+  --secondary: #2f334d;
+  --secondary-foreground: #c0caf5;
+  --muted: #2f334d;
+  --muted-foreground: #787c99;
+  --accent: #bb9af7;
+  --accent-foreground: #1a1b26;
+  --destructive: #f7768e;
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: #7aa2f7;
+}
+
+[data-theme="github-dark"] {
+  --background: #0d1117;
+  --foreground: #c9d1d9;
+  --card: #161b22;
+  --card-foreground: #c9d1d9;
+  --popover: #161b22;
+  --popover-foreground: #c9d1d9;
+  --primary: #238636;
+  --primary-foreground: #ffffff;
+  --secondary: #21262d;
+  --secondary-foreground: #c9d1d9;
+  --muted: #21262d;
+  --muted-foreground: #8b949e;
+  --accent: #58a6ff;
+  --accent-foreground: #0d1117;
+  --destructive: #da3633;
+  --border: #30363d;
+  --input: #30363d;
+  --ring: #58a6ff;
+}
+
+/* Sidebar uses its own tokens; without this every theme falls back to the base
+ * `.dark` sidebar color. Resolve them per-theme from card/foreground. */
+[data-theme="gitkraken"],
+[data-theme="dracula"],
+[data-theme="catppuccin"],
+[data-theme="nord"],
+[data-theme="tokyo-night"],
+[data-theme="github-dark"] {
+  --sidebar: var(--card);
+  --sidebar-foreground: var(--foreground);
+  --sidebar-accent: var(--accent);
+  --sidebar-accent-foreground: var(--accent-foreground);
+  --sidebar-border: var(--border);
+  --sidebar-ring: var(--ring);
+  --sidebar-primary: var(--primary);
+  --sidebar-primary-foreground: var(--primary-foreground);
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

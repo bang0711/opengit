@@ -150,6 +150,7 @@ export function SidebarPanel({ branches, remotes, tags, stashes }: Props) {
                   >
                     {remote}
                   </div>
+                  
                   {list.map((b) => (
                     <BranchRow
                       key={b.fullName}

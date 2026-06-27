@@ -11,7 +11,14 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { ModeRadio } from "./mode-radio";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export function NewRemoteBranchDialog({
   open,
@@ -74,34 +81,57 @@ export function NewRemoteBranchDialog({
           {remotes.length > 1 ? (
             <div className="flex flex-col gap-1.5">
               <span className="text-xs font-medium">Remote</span>
-              <select
-                value={remote}
-                onChange={(e) => setRemote(e.target.value)}
-                className="h-8 rounded-md border border-input bg-transparent px-2 text-xs"
-              >
-                {remotes.map((r) => (
-                  <option key={r} value={r}>
-                    {r}
-                  </option>
-                ))}
-              </select>
+              <Select value={remote} onValueChange={setRemote}>
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {remotes.map((r) => (
+                    <SelectItem key={r} value={r}>
+                      {r}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           ) : null}
 
           <fieldset className="flex flex-col gap-1.5">
             <legend className="mb-1.5 text-xs font-medium">Create</legend>
-            <ModeRadio
-              checked={mode === "both"}
-              onSelect={() => setMode("both")}
-              label="Remote + local"
-              hint="Branch locally, switch to it, and push with tracking"
-            />
-            <ModeRadio
-              checked={mode === "remote"}
-              onSelect={() => setMode("remote")}
-              label="Remote only"
-              hint="Push a new branch to the remote; stay on the current branch"
-            />
+            <RadioGroup
+              value={mode}
+              onValueChange={(v) => setMode(v as "remote" | "both")}
+              className="gap-1.5"
+            >
+              <label
+                htmlFor="mode-both"
+                className="flex cursor-pointer items-start gap-2 rounded-md p-1.5 hover:bg-muted/50"
+              >
+                <RadioGroupItem id="mode-both" value="both" className="mt-0.5" />
+                <span className="flex flex-col">
+                  <span className="text-xs font-medium">Remote + local</span>
+                  <span className="text-[0.625rem] text-muted-foreground">
+                    Branch locally, switch to it, and push with tracking
+                  </span>
+                </span>
+              </label>
+              <label
+                htmlFor="mode-remote"
+                className="flex cursor-pointer items-start gap-2 rounded-md p-1.5 hover:bg-muted/50"
+              >
+                <RadioGroupItem
+                  id="mode-remote"
+                  value="remote"
+                  className="mt-0.5"
+                />
+                <span className="flex flex-col">
+                  <span className="text-xs font-medium">Remote only</span>
+                  <span className="text-[0.625rem] text-muted-foreground">
+                    Push a new branch to the remote; stay on the current branch
+                  </span>
+                </span>
+              </label>
+            </RadioGroup>
           </fieldset>
 
           <DialogFooter>

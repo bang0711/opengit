@@ -12,6 +12,7 @@ import { SideBySideDiff } from "@/components/workspace/side-by-side-diff";
 import { WorkingDiff } from "@/components/workspace/working-diff";
 import { getValidActiveRepoPath } from "@/lib/active-repo";
 import { parseUnifiedDiff } from "@/lib/diff";
+import { langFromPath } from "@/lib/highlight";
 import { buildFileTree } from "@/lib/file-tree";
 import {
   type CommitFile,
@@ -218,6 +219,7 @@ async function DiffPane({
           newLabel={newLabel}
           oldText={oldText}
           newText={newText}
+          lang={langFromPath(file)}
         />
       )}
     </div>

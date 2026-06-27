@@ -18,12 +18,14 @@ export function SideBySideDiff({
   newLabel,
   oldText,
   newText,
+  lang,
 }: {
   rows: DiffRow[];
   oldLabel: string;
   newLabel: string;
   oldText: string;
   newText: string;
+  lang?: string;
 }) {
   const [leftPct, setLeftPct] = usePersistedState("opengit.diffSplit", 50);
   const wrapRef = useRef<HTMLDivElement>(null);
@@ -72,7 +74,7 @@ export function SideBySideDiff({
       <div ref={wrapRef} className="relative min-h-0 flex-1">
         <ScrollArea className="h-full">
           <div>
-            <DiffRows rows={rows} cols={cols} />
+            <DiffRows rows={rows} cols={cols} lang={lang} />
           </div>
           <ScrollBar orientation="horizontal" />
         </ScrollArea>

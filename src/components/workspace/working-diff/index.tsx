@@ -81,7 +81,7 @@ export function WorkingDiff({ file }: { file: string }) {
       {error ? (
         <p className="p-3 text-xs text-destructive">{error}</p>
       ) : view === "split" ? (
-        <SplitView patch={patch} />
+        <SplitView patch={patch} file={file} />
       ) : (
         <UnifiedView
           hunks={hunks}

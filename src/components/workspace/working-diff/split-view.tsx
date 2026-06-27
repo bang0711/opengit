@@ -1,9 +1,16 @@
 import { Notice } from "@/components/shared/notice";
 import { SideBySideDiff } from "@/components/workspace/side-by-side-diff";
 import { type DiffRow, parseUnifiedDiff } from "@/lib/diff";
+import { langFromPath } from "@/lib/highlight";
 
 // HEAD-vs-working-tree comparison, rendered like the commit inspector.
-export function SplitView({ patch }: { patch: string | null }) {
+export function SplitView({
+  patch,
+  file,
+}: {
+  patch: string | null;
+  file?: string;
+}) {
   if (patch === null) return null;
   const parsed = parseUnifiedDiff(patch);
   if (parsed.rows.length === 0) {
@@ -20,6 +27,7 @@ export function SplitView({ patch }: { patch: string | null }) {
       newLabel="Working tree"
       oldText={collect(parsed.rows, "left")}
       newText={collect(parsed.rows, "right")}
+      lang={file ? langFromPath(file) : undefined}
     />
   );
 }

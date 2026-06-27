@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { FileIcon } from "@/components/shared/file-icon";
 import { statusColor } from "@/components/shared/file-status";
 import type { CommitFile } from "@/lib/git";
 import { cn } from "@/lib/utils";
@@ -18,6 +19,7 @@ export function FileRow({ file, sha }: { file: CommitFile; sha: string }) {
       >
         {file.status}
       </span>
+      <FileIcon name={file.path} />
       <span className="truncate" title={file.path}>
         {file.path}
       </span>

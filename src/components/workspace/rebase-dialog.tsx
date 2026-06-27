@@ -14,6 +14,13 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import type { RebaseCommit } from "@/lib/git";
 import { notify } from "@/lib/notify";
 import { cn } from "@/lib/utils";
@@ -95,22 +102,23 @@ export function RebaseDialog({
                       {c.short}
                     </span>
                     <span className="truncate">{c.subject}</span>
-                    <select
+                    <Select
                       value={op}
-                      onChange={(e) =>
-                        setOps((m) => ({
-                          ...m,
-                          [c.sha]: e.target.value as RebaseOp,
-                        }))
+                      onValueChange={(v) =>
+                        setOps((m) => ({ ...m, [c.sha]: v as RebaseOp }))
                       }
-                      className="ml-auto shrink-0 rounded-md border border-border bg-input/30 px-1.5 py-0.5 text-xs outline-none"
                     >
-                      {OPS.map((o) => (
-                        <option key={o} value={o}>
-                          {o}
-                        </option>
-                      ))}
-                    </select>
+                      <SelectTrigger className="ml-auto h-6">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {OPS.map((o) => (
+                          <SelectItem key={o} value={o}>
+                            {o}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                 );
               })}

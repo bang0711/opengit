@@ -4,9 +4,11 @@ import { Cell } from "./cell";
 export function Row({
   row,
   cols,
+  lang,
 }: {
   row: DiffRow;
   cols: React.CSSProperties;
+  lang?: string;
 }) {
   if (row.type === "hunk") {
     return (
@@ -22,6 +24,7 @@ export function Row({
         text={row.leftText}
         tone={row.leftDel ? "del" : "ctx"}
         sign={row.leftDel ? "-" : " "}
+        lang={lang}
         className="border-border border-r"
       />
       <Cell
@@ -29,6 +32,7 @@ export function Row({
         text={row.rightText}
         tone={row.rightAdd ? "add" : "ctx"}
         sign={row.rightAdd ? "+" : " "}
+        lang={lang}
       />
     </div>
   );

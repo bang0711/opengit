@@ -11,6 +11,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { DiffStat } from "@/components/shared/diff-stat";
+import { FileIcon } from "@/components/shared/file-icon";
 import { StatusBadge } from "@/components/shared/file-status";
 import { Button } from "@/components/ui/button";
 import {
@@ -47,6 +48,7 @@ export function FileRow({
       <ContextMenuTrigger asChild>
         <div className="group flex items-center gap-1.5 px-3 py-0.5 text-xs hover:bg-muted/50">
           <StatusBadge code={code} />
+          <FileIcon name={file.path} className="size-3.5" />
           <Link
             href={{ pathname: "/diff", query: { wt: "1", file: file.path } }}
             className="truncate hover:underline"

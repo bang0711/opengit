@@ -1,3 +1,4 @@
+import { highlightLine } from "@/lib/highlight";
 import { cn } from "@/lib/utils";
 
 export function Cell({
@@ -5,12 +6,14 @@ export function Cell({
   text,
   tone,
   sign,
+  lang,
   className,
 }: {
   no: number | null;
   text: string | null;
   tone: "add" | "del" | "ctx";
   sign: string;
+  lang?: string;
   className?: string;
 }) {
   const empty = text === null;
@@ -28,15 +31,11 @@ export function Cell({
         {no ?? ""}
       </span>
       {!empty ? (
-        <span
-          className={cn(
-            "w-full px-2 break-words whitespace-pre-wrap",
-            tone === "add" && "text-green-300",
-            tone === "del" && "text-red-300",
-          )}
-        >
+        <span className="w-full px-2 break-words whitespace-pre-wrap">
           <span className="text-muted-foreground/60 select-none">{sign} </span>
-          {text}
+          {/* Prism escapes its input; diff text is local repo content. */}
+          {/* biome-ignore lint/security/noDangerouslySetInnerHtml: trusted Prism output */}
+          <span dangerouslySetInnerHTML={{ __html: highlightLine(text, lang) }} />
         </span>
       ) : null}
     </div>
