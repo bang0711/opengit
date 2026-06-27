@@ -11,8 +11,12 @@ const src = join(root, "src", "app", "icon.svg");
 const outDir = join(root, "build");
 await mkdir(outDir, { recursive: true });
 
-// PNG (used by mac/linux bundles + the Electron window icon).
-await sharp(src).resize(256, 256, { fit: "contain" }).png().toFile(join(outDir, "icon.png"));
+// PNG (used by mac/linux bundles + the Electron window icon). macOS requires
+// at least 512x512 — use 1024 so the .icns electron-builder generates is sharp.
+await sharp(src)
+  .resize(1024, 1024, { fit: "contain" })
+  .png()
+  .toFile(join(outDir, "icon.png"));
 
 // Multi-size ICO for Windows. Vista+ .ico entries may be PNG-encoded, so we
 // just pack one PNG per size into the ICO container.
