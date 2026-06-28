@@ -315,6 +315,7 @@ export interface Github {
   tokenStatus(): Promise<GhStatus>;
   setToken(token: string): Promise<GhStatus>;
   clearToken(): Promise<void>;
+  repoContext(): Promise<{ owner: string; repo: string } | null>;
   listPRs(): Promise<PullRequest[] | Err>;
   getPR(number: number): Promise<PullRequestDetail | Err>;
   mergePR(number: number, method: MergeMethod): Promise<ActionState>;

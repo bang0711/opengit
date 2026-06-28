@@ -30,9 +30,15 @@ async function ghContext(): Promise<{ owner: string; repo: string }> {
   return parsed;
 }
 
+// ETag cache for GET requests. Conditional requests that return 304 (Not
+// Modified) do NOT count against the GitHub rate limit, so we can poll fast.
+const etagCache = new Map<string, { etag: string; data: unknown }>();
+
 async function ghFetch<T>(path: string, init?: RequestInit): Promise<T> {
   const token = getGithubToken();
   if (!token) throw new Error("Not connected to GitHub.");
+  const method = init?.method ?? "GET";
+  const cached = method === "GET" ? etagCache.get(path) : undefined;
   const res = await fetch(`${API}${path}`, {
     ...init,
     headers: {
@@ -40,10 +46,12 @@ async function ghFetch<T>(path: string, init?: RequestInit): Promise<T> {
       Accept: "application/vnd.github+json",
       "User-Agent": "OpenGit",
       "X-GitHub-Api-Version": "2022-11-28",
+      ...(cached ? { "If-None-Match": cached.etag } : {}),
       ...(init?.body ? { "Content-Type": "application/json" } : {}),
       ...init?.headers,
     },
   });
+  if (res.status === 304 && cached) return cached.data as T;
   if (res.status === 204) return undefined as T;
   const data = await res.json().catch(() => null);
   if (!res.ok) {
@@ -52,6 +60,8 @@ async function ghFetch<T>(path: string, init?: RequestInit): Promise<T> {
       `GitHub request failed (${res.status})`;
     throw new Error(msg);
   }
+  const etag = res.headers.get("etag");
+  if (method === "GET" && etag) etagCache.set(path, { etag, data });
   return data as T;
 }
 
@@ -101,6 +111,16 @@ async function status(): Promise<GhStatus> {
     return { connected: true, login: u.login, avatarUrl: u.avatar_url };
   } catch (e) {
     return { connected: false, reason: (e as Error).message };
+  }
+}
+
+// owner/repo of the active repo, or null when it isn't a GitHub remote. Used by
+// the renderer to subscribe the webhook relay to the right repo. No token needed.
+async function repoContext(): Promise<{ owner: string; repo: string } | null> {
+  try {
+    return await ghContext();
+  } catch {
+    return null;
   }
 }
 
@@ -300,6 +320,7 @@ export function wireGithub(log: (...a: unknown[]) => void): void {
   ipcMain.handle("gh:tokenStatus", () => status());
   ipcMain.handle("gh:setToken", (_e, token: string) => setToken(token));
   ipcMain.handle("gh:clearToken", () => clearGithubToken());
+  ipcMain.handle("gh:repoContext", () => repoContext());
 
   // Reads return data or { error }; actions return {} or { error }.
   const read = <T>(fn: () => Promise<T>) =>

@@ -4,12 +4,14 @@ import {
   RiAddLine,
   RiArrowLeftLine,
   RiErrorWarningLine,
+  RiFlashlightLine,
   RiGitBranchLine,
   RiGithubFill,
   RiGitPullRequestLine,
   RiLoader4Line,
   RiLogoutBoxRLine,
   RiRefreshLine,
+  RiSettings3Line,
   RiTeamLine,
 } from "@remixicon/react";
 import type {
@@ -28,6 +30,8 @@ import {
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { usePersistedState } from "@/hooks/use-persisted-state";
+import { useRealtime } from "@/hooks/use-realtime";
 import {
   Sidebar,
   SidebarContent,
@@ -43,11 +47,13 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import Link from "@/lib/link";
+import { cn } from "@/lib/utils";
 import { ConnectForm } from "./connect-form";
 import { CreatePrDialog } from "./create-pr-dialog";
 import { Branches, Collaborators, Issues } from "./lists";
 import { PrDetail } from "./pr-detail";
 import { PrList } from "./pr-list";
+import { Settings } from "./settings";
 
 type Lists = {
   prs: PullRequest[];
@@ -58,56 +64,70 @@ type Lists = {
 const EMPTY: Lists = { prs: [], collaborators: [], issues: [], branches: [] };
 const arr = <T,>(x: T[] | { error: string }): T[] => (Array.isArray(x) ? x : []);
 
-type Section = "prs" | "issues" | "collab" | "branches";
-const POLL_MS = 15000;
+type Section = "prs" | "issues" | "collab" | "branches" | "settings";
 
 const SECTION_LABEL: Record<Section, string> = {
   prs: "Pull Requests",
   issues: "Issues",
   collab: "People",
   branches: "Branches",
+  settings: "Settings",
 };
 
 export function GithubPanel() {
   const [status, setStatus] = useState<GhStatus | null>(null);
   const [data, setData] = useState<Lists>(EMPTY);
+  const [loading, setLoading] = useState(true);
   const [section, setSection] = useState<Section>("prs");
   const [selectedPr, setSelectedPr] = useState<number | null>(null);
   const [creating, setCreating] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
+  const [repo, setRepo] = useState("");
+  const [relayUrl, setRelayUrl] = usePersistedState("opengit.gh.relay", "");
 
   // Fetch in the component (not a route loader) so navigation is instant.
   const load = useCallback(async () => {
-    const s = await window.github.tokenStatus();
-    setStatus(s);
-    if (!s.connected) {
-      setData(EMPTY);
-      return;
+    setLoading(true);
+    try {
+      const s = await window.github.tokenStatus();
+      setStatus(s);
+      if (!s.connected) {
+        setData(EMPTY);
+        return;
+      }
+      const [prs, collaborators, issues, branches] = await Promise.all([
+        window.github.listPRs(),
+        window.github.listCollaborators(),
+        window.github.listIssues(),
+        window.github.listRemoteBranches(),
+      ]);
+      setData({
+        prs: arr(prs),
+        collaborators: arr(collaborators),
+        issues: arr(issues),
+        branches: arr(branches),
+      });
+    } finally {
+      setLoading(false);
     }
-    const [prs, collaborators, issues, branches] = await Promise.all([
-      window.github.listPRs(),
-      window.github.listCollaborators(),
-      window.github.listIssues(),
-      window.github.listRemoteBranches(),
-    ]);
-    setData({
-      prs: arr(prs),
-      collaborators: arr(collaborators),
-      issues: arr(issues),
-      branches: arr(branches),
-    });
   }, []);
 
-  // Initial load + real-time poll + refetch on window focus.
+  // One-time load on mount (no polling). Realtime updates come from the relay.
   useEffect(() => {
     load();
-    const id = setInterval(load, POLL_MS);
-    const onFocus = () => load();
-    window.addEventListener("focus", onFocus);
-    return () => {
-      clearInterval(id);
-      window.removeEventListener("focus", onFocus);
-    };
   }, [load]);
+
+  // Identify the repo once so the relay can subscribe to it.
+  useEffect(() => {
+    window.github.repoContext().then((c) => setRepo(c ? `${c.owner}/${c.repo}` : ""));
+  }, []);
+
+  // Push-based real-time: refetch lists + open PR whenever the relay forwards a
+  // webhook event for this repo.
+  const rtStatus = useRealtime(relayUrl, repo, () => {
+    load();
+    setRefreshKey((k) => k + 1);
+  });
 
   const disconnect = async () => {
     await window.github.clearToken();
@@ -115,22 +135,17 @@ export function GithubPanel() {
     load();
   };
 
-  if (status === null) {
-    return (
-      <div className="bg-background text-muted-foreground flex h-screen items-center justify-center">
-        <RiLoader4Line className="size-6 animate-spin" />
-      </div>
-    );
-  }
-
-  if (!status.connected) {
+  // Only the resolved "no token" case drops the sidebar. While the first fetch
+  // is still in flight (status === null) we optimistically render the shell so
+  // the layout never blanks out — the content area shows the loading state.
+  if (status && !status.connected) {
     return (
       <div className="bg-background h-screen">
         <ConnectForm reason={status.reason} onConnected={load} />
       </div>
     );
   }
-  const account = status;
+  const login = status?.connected ? status.login : "";
 
   const openCount = data.prs.filter((p) => p.state === "open").length;
   const nav: { key: Section; icon: React.ReactNode; count: number }[] = [
@@ -154,7 +169,7 @@ export function GithubPanel() {
                   <div className="grid flex-1 text-left text-sm leading-tight">
                     <span className="truncate font-semibold">GitHub</span>
                     <span className="text-muted-foreground truncate text-xs">
-                      {account.login}
+                      {login || "Connecting…"}
                     </span>
                   </div>
                   <RiArrowLeftLine className="ml-auto size-4" />
@@ -180,6 +195,16 @@ export function GithubPanel() {
                   <SidebarMenuBadge>{n.count}</SidebarMenuBadge>
                 </SidebarMenuItem>
               ))}
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  tooltip="Settings"
+                  isActive={section === "settings"}
+                  onClick={() => setSection("settings")}
+                >
+                  <RiSettings3Line />
+                  <span>Settings</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroup>
         </SidebarContent>
@@ -206,6 +231,30 @@ export function GithubPanel() {
             {SECTION_LABEL[section]}
           </span>
           <div className="ml-auto flex items-center gap-2">
+            <ActionTooltip
+              label={
+                rtStatus === "live"
+                  ? "Real-time: live"
+                  : relayUrl
+                    ? "Real-time: disconnected"
+                    : "Real-time off — set up a relay in Settings"
+              }
+            >
+              <button
+                type="button"
+                onClick={() => setSection("settings")}
+                className="text-muted-foreground flex items-center gap-1.5 text-[0.7rem]"
+              >
+                <RiFlashlightLine
+                  className={cn(
+                    "size-3.5",
+                    rtStatus === "live" && "text-[#3fb950]",
+                    rtStatus === "error" && "text-[#f85149]",
+                  )}
+                />
+                {rtStatus === "live" ? "Live" : "Off"}
+              </button>
+            </ActionTooltip>
             <ActionTooltip label="Refresh">
               <Button variant="ghost" size="icon" onClick={load}>
                 <RiRefreshLine />
@@ -218,7 +267,11 @@ export function GithubPanel() {
         </header>
 
         <div className="min-h-0 flex-1">
-          {section === "prs" ? (
+          {loading && status === null ? (
+            <div className="text-muted-foreground flex h-full items-center justify-center">
+              <RiLoader4Line className="size-6 animate-spin" />
+            </div>
+          ) : section === "prs" ? (
             <ResizablePanelGroup orientation="horizontal" className="h-full">
               <ResizablePanel defaultSize="38%" minSize="24%" maxSize="55%">
                 <ScrollArea className="h-full">
@@ -236,6 +289,7 @@ export function GithubPanel() {
                 {selectedPr !== null ? (
                   <PrDetail
                     number={selectedPr}
+                    refreshKey={refreshKey}
                     onBack={() => setSelectedPr(null)}
                     onChanged={load}
                   />
@@ -254,8 +308,15 @@ export function GithubPanel() {
                   <Issues issues={data.issues} />
                 ) : section === "collab" ? (
                   <Collaborators collaborators={data.collaborators} />
-                ) : (
+                ) : section === "branches" ? (
                   <Branches branches={data.branches} />
+                ) : (
+                  <Settings
+                    relayUrl={relayUrl}
+                    status={rtStatus}
+                    repo={repo}
+                    onSave={setRelayUrl}
+                  />
                 )}
               </div>
             </ScrollArea>

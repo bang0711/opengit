@@ -32,6 +32,7 @@ const github = {
   tokenStatus: () => ipcRenderer.invoke("gh:tokenStatus"),
   setToken: (token: string) => ipcRenderer.invoke("gh:setToken", token),
   clearToken: () => ipcRenderer.invoke("gh:clearToken"),
+  repoContext: () => ipcRenderer.invoke("gh:repoContext"),
   listPRs: () => ipcRenderer.invoke("gh:listPRs"),
   getPR: (n: number) => ipcRenderer.invoke("gh:getPR", n),
   mergePR: (n: number, method: string) =>

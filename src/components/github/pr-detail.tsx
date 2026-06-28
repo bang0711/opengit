@@ -35,10 +35,12 @@ import { checkColor, StateBadge } from "./status";
 
 export function PrDetail({
   number,
+  refreshKey,
   onBack,
   onChanged,
 }: {
   number: number;
+  refreshKey?: number;
   onBack: () => void;
   onChanged: () => void;
 }) {
@@ -57,10 +59,11 @@ export function PrDetail({
     }
   };
 
+  // Load on open and whenever a relay event bumps refreshKey (no polling).
   useEffect(() => {
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [number]);
+  }, [number, refreshKey]);
 
   const run = async (
     fn: () => Promise<{ error?: string }>,
