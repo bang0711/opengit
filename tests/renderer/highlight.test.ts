@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { langFromPath } from "./highlight";
+import { langFromPath } from "@/lib/highlight";
 
 describe("langFromPath", () => {
   it("maps known extensions to Prism languages", () => {

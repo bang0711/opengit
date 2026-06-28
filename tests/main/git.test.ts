@@ -16,7 +16,7 @@ import {
   getStatus,
   getTags,
   isGitRepo,
-} from "./git";
+} from "@main/git";
 
 // Integration: spin a throwaway repo and run real git through these functions.
 let repo: string;

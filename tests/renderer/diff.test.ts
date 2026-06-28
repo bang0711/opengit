@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseUnifiedDiff, splitDiffIntoHunks } from "./diff";
+import { parseUnifiedDiff, splitDiffIntoHunks } from "@/lib/diff";
 
 const PATCH = `diff --git a/file.txt b/file.txt
 index abc..def 100644

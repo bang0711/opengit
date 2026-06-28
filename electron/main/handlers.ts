@@ -17,6 +17,7 @@ import type {
   WorkspaceData,
 } from "@shared/types";
 import { splitDiffIntoHunks } from "./diff-hunks";
+import { cloneAuthArgs, isWindowsDriveRoot } from "./path-utils";
 import {
   GitError,
   getBlame,
@@ -118,8 +119,11 @@ export async function listDirectory(path?: string): Promise<DirListing> {
   if (path === DRIVES) return listDrives();
   const target = path && isAbsolute(path) ? path : homedir();
   const parent = dirname(target);
-  const driveRoot = process.platform === "win32" && /^[a-zA-Z]:\\$/.test(target);
-  const up = driveRoot ? DRIVES : parent === target ? null : parent;
+  const up = isWindowsDriveRoot(target)
+    ? DRIVES
+    : parent === target
+      ? null
+      : parent;
   try {
     const dirents = await readdir(target, { withFileTypes: true });
     const entries: DirEntry[] = dirents
@@ -185,17 +189,9 @@ export async function cloneRepo(
       .split(/[/:]/)
       .pop() || "repo";
   const target = join(parent, name);
-  // For private HTTPS repos: pass the token via an ephemeral -c http.extraHeader
-  // (Basic auth). Not written to .git/config and not embedded in the remote URL.
-  const auth = token?.trim();
-  const cfg = auth
-    ? [
-        "-c",
-        `http.extraHeader=Authorization: Basic ${Buffer.from(
-          `x-access-token:${auth}`,
-        ).toString("base64")}`,
-      ]
-    : [];
+  // For private HTTPS repos: authenticate with the token via an ephemeral
+  // -c http.extraHeader (not persisted to config, not embedded in the URL).
+  const cfg = cloneAuthArgs(token);
   try {
     await mkdir(parent, { recursive: true });
     await runGit(parent, [...cfg, "clone", u, target], {

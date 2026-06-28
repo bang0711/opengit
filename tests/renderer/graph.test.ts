@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Commit } from "@shared/types";
-import { buildGraph, laneColor, LANE_COLORS } from "./graph";
+import { buildGraph, laneColor, LANE_COLORS } from "@/lib/graph";
 
 const c = (sha: string, parents: string[]): Commit => ({
   sha,

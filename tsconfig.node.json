@@ -12,8 +12,14 @@
     "noEmit": true,
     "composite": true,
     "paths": {
-      "@shared/*": ["./shared/*"]
+      "@shared/*": ["./shared/*"],
+      "@main/*": ["./electron/main/*"]
     }
   },
-  "include": ["electron/**/*.ts", "shared/**/*.ts", "electron.vite.config.ts"]
+  "include": [
+    "electron/**/*.ts",
+    "shared/**/*.ts",
+    "electron.vite.config.ts",
+    "tests/main/**/*.ts"
+  ]
 }

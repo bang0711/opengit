@@ -19,6 +19,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { splitRepoPath } from "@/lib/repo-path";
 import { useRouter } from "@/lib/router";
 
 export function RepoPicker({ recent }: { recent: string[] }) {
@@ -204,9 +205,7 @@ export function RepoPicker({ recent }: { recent: string[] }) {
               </p>
               <div className="flex flex-col gap-1">
                 {recent.map((recentPath) => {
-                  const parts = recentPath.split(/[/\\]/).filter(Boolean);
-                  const name = parts.at(-1) ?? recentPath;
-                  const location = parts.slice(0, -1).join("/") || recentPath;
+                  const { name, location } = splitRepoPath(recentPath);
                   return (
                     <button
                       key={recentPath}

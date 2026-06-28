@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { CommitFile } from "@shared/types";
-import { buildFileTree, type TreeNode } from "./file-tree";
+import { buildFileTree, type TreeNode } from "@/lib/file-tree";
 
 const f = (path: string): CommitFile => ({
   path,

@@ -1,8 +1,9 @@
 "use client";
 
 import { RiArrowLeftLine } from "@remixicon/react";
+import { useEffect, useState } from "react";
+import { useRevalidator } from "react-router-dom";
 import Link from "@/lib/link";
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   ResizableHandle,
@@ -29,6 +30,11 @@ export function WorkingTreeViewer({
   initialFile: string | null;
 }) {
   const [selected, setSelected] = useState(initialFile);
+  const { revalidate } = useRevalidator();
+
+  // Re-run the loader on any working-tree change so the file tree picks up
+  // newly created/deleted files and folders (not just edits to the open file).
+  useEffect(() => window.api.onRepoChange(() => revalidate()), [revalidate]);
 
   return (
     <div className="bg-background flex h-screen flex-col">

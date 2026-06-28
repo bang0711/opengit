@@ -6,10 +6,11 @@ export default defineConfig({
     alias: {
       "@": resolve(__dirname, "src"),
       "@shared": resolve(__dirname, "shared"),
+      "@main": resolve(__dirname, "electron/main"),
     },
   },
   test: {
     environment: "node",
-    include: ["src/**/*.test.ts", "electron/**/*.test.ts"],
+    include: ["tests/**/*.test.ts"],
   },
 });

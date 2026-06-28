@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { hrefToPath } from "./link";
+import { hrefToPath } from "@/lib/link";
 
 describe("hrefToPath", () => {
   it("passes string hrefs through", () => {
