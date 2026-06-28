@@ -156,7 +156,7 @@ export function CreatePrDialog({
           {collaborators.length > 0 ? (
             <div className="flex flex-col gap-1.5">
               <Label>Reviewers</Label>
-              <DropdownMenu>
+              <DropdownMenu modal={false}>
                 <DropdownMenuTrigger asChild>
                   <Button
                     type="button"
