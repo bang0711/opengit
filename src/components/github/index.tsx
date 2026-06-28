@@ -8,7 +8,6 @@ import {
   RiGitBranchLine,
   RiGithubFill,
   RiGitPullRequestLine,
-  RiLoader4Line,
   RiLogoutBoxRLine,
   RiRefreshLine,
   RiSettings3Line,
@@ -54,6 +53,7 @@ import { Branches, Collaborators, Issues } from "./lists";
 import { PrDetail } from "./pr-detail";
 import { PrList } from "./pr-list";
 import { Settings } from "./settings";
+import { PrListSkeleton } from "./skeletons";
 
 type Lists = {
   prs: PullRequest[];
@@ -156,7 +156,7 @@ export function GithubPanel() {
   ];
 
   return (
-    <SidebarProvider className="h-screen min-h-0">
+    <SidebarProvider className="h-screen min-h-0 overflow-hidden">
       <Sidebar collapsible="icon" variant="inset">
         <SidebarHeader>
           <SidebarMenu>
@@ -268,8 +268,11 @@ export function GithubPanel() {
 
         <div className="min-h-0 flex-1">
           {loading && status === null ? (
-            <div className="text-muted-foreground flex h-full items-center justify-center">
-              <RiLoader4Line className="size-6 animate-spin" />
+            <div className="flex h-full">
+              <div className="border-border w-[38%] shrink-0 overflow-hidden border-r">
+                <PrListSkeleton />
+              </div>
+              <div className="flex-1" />
             </div>
           ) : section === "prs" ? (
             <ResizablePanelGroup orientation="horizontal" className="h-full">

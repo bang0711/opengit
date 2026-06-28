@@ -261,6 +261,7 @@ export type PrFile = {
   status: string;
   additions: number;
   deletions: number;
+  patch: string | null; // unified diff, null for binary/large files
 };
 export type PrComment = {
   id: number;

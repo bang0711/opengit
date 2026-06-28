@@ -145,7 +145,13 @@ async function getPR(n: number): Promise<PullRequestDetail> {
   const pr = await ghFetch<RawPr>(`${base}/pulls/${n}`);
   const [files, comments, reviews] = await Promise.all([
     ghFetch<
-      Array<{ filename: string; status: string; additions: number; deletions: number }>
+      Array<{
+        filename: string;
+        status: string;
+        additions: number;
+        deletions: number;
+        patch?: string;
+      }>
     >(`${base}/pulls/${n}/files?per_page=100`),
     ghFetch<Array<{ id: number; user: RawUser; body: string; created_at: string }>>(
       `${base}/issues/${n}/comments?per_page=100`,
@@ -176,6 +182,7 @@ async function getPR(n: number): Promise<PullRequestDetail> {
       status: f.status,
       additions: f.additions,
       deletions: f.deletions,
+      patch: f.patch ?? null,
     })),
     comments_list: comments.map((c) => ({
       id: c.id,
