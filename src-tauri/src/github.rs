@@ -86,11 +86,32 @@ async fn gh_fetch(
         .map(str::to_string);
     let data: Value = res.json().await.unwrap_or(Value::Null);
     if !status.is_success() {
-        let msg = data
+        let mut msg = data
             .get("message")
             .and_then(|m| m.as_str())
             .map(str::to_string)
             .unwrap_or_else(|| format!("GitHub request failed ({})", status.as_u16()));
+        // 422 "Validation Failed" carries the real reason in `errors[]`
+        // (e.g. "No commits between main and feat", or a duplicate PR). Surface it.
+        if let Some(errs) = data.get("errors").and_then(Value::as_array) {
+            let details: Vec<String> = errs
+                .iter()
+                .filter_map(|e| {
+                    e.get("message")
+                        .and_then(Value::as_str)
+                        .map(str::to_string)
+                        .or_else(|| {
+                            let field = e.get("field").and_then(Value::as_str).unwrap_or("");
+                            let code = e.get("code").and_then(Value::as_str).unwrap_or("");
+                            let s = format!("{field} {code}").trim().to_string();
+                            (!s.is_empty()).then_some(s)
+                        })
+                })
+                .collect();
+            if !details.is_empty() {
+                msg = format!("{msg}: {}", details.join("; "));
+            }
+        }
         return Err(msg);
     }
     if is_get {
