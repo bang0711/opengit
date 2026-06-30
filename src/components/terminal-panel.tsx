@@ -93,6 +93,29 @@ function TerminalView({
       const fit = new FitAddon();
       term.loadAddon(fit);
       term.open(host);
+
+      // Keyboard: copy/paste vs. the shell's control keys.
+      // - Ctrl/Cmd+C with a selection → copy (don't send SIGINT); without a
+      //   selection → fall through so Ctrl+C still cancels in the shell.
+      // - Ctrl+Shift+C → always copy (Linux terminal convention).
+      // - Ctrl/Cmd+V or Ctrl+Shift+V → paste.
+      term.attachCustomKeyEventHandler((e) => {
+        if (e.type !== "keydown") return true;
+        const mod = e.ctrlKey || e.metaKey;
+        if (mod && e.code === "KeyC" && (e.shiftKey || term.hasSelection())) {
+          const sel = term.getSelection();
+          if (sel) navigator.clipboard?.writeText(sel);
+          return false;
+        }
+        if (mod && e.code === "KeyV") {
+          navigator.clipboard?.readText().then((t) => {
+            if (t) term.paste(t);
+          });
+          return false;
+        }
+        return true;
+      });
+
       fit.fit();
       fitRef.current = fit;
       setReady(true);
