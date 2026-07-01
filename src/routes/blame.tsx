@@ -2,9 +2,9 @@ import { RiArrowLeftLine, RiFileTextLine } from "@remixicon/react";
 import { type LoaderFunctionArgs, useLoaderData } from "react-router-dom";
 import type { BlameLine } from "@shared/types";
 import { BlameRow } from "@/app/blame/blame-row";
+import { Island } from "@/components/island";
 import { Button } from "@/components/ui/button";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import Link from "@/lib/link";
 
 export async function blameLoader({ request }: LoaderFunctionArgs) {
   const file = new URL(request.url).searchParams.get("file");
@@ -20,13 +20,16 @@ export function Blame() {
     ReturnType<typeof blameLoader>
   >;
   return (
-    <div className="flex h-screen flex-col bg-background">
+    <div className="bg-background h-screen p-1.5">
+      <Island>
       <header className="flex h-11 shrink-0 items-center gap-3 border-b border-border bg-card px-3">
-        <Button asChild variant="outline" size="sm">
-          <Link href="/">
-            <RiArrowLeftLine />
-            Back to repository
-          </Link>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => window.history.back()}
+        >
+          <RiArrowLeftLine />
+          Back
         </Button>
         <div className="flex min-w-0 items-center gap-2 text-xs">
           <RiFileTextLine className="size-4 shrink-0 text-muted-foreground" />
@@ -49,6 +52,7 @@ export function Blame() {
           <ScrollBar orientation="horizontal" />
         </ScrollArea>
       )}
+      </Island>
     </div>
   );
 }

@@ -27,7 +27,7 @@ import {
 import { ActionTooltip } from "@/components/action-tooltip";
 import { GitLogo } from "@/components/git-logo";
 import { RepoSettingsDialog } from "@/components/repo-settings-dialog";
-import { toggleTerminal } from "@/components/terminal-panel";
+import { toggleTerminal } from "@/lib/terminal-open";
 import { ThemeToggle } from "@/components/theme-toggle";
 import Link from "@/lib/link";
 import { useRouter } from "@/lib/router";
@@ -166,7 +166,7 @@ export function Topbar({ repo, current, branches }: Props) {
 
         <UpdateChecker />
 
-        <ActionTooltip label="Toggle terminal">
+        <ActionTooltip label="Toggle terminal (Ctrl+J)">
           <Button variant="ghost" size="icon" onClick={toggleTerminal}>
             <RiTerminalBoxLine />
           </Button>

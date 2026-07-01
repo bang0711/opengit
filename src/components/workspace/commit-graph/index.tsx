@@ -70,7 +70,7 @@ export function CommitGraph({
   };
 
   return (
-    <div className="bg-background flex h-full flex-col">
+    <div className="bg-card flex h-full flex-col">
       <div className="border-border text-muted-foreground flex h-8 shrink-0 items-center gap-2 border-b px-3 text-xs font-semibold">
         History
         <span className="font-normal">{shown.length} commits</span>

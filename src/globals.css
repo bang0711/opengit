@@ -90,38 +90,40 @@ body,
   --shadow-2xl: 0px 1px 2.5px 0px oklch(0.49 0.09 235.45 / 0.15);
 }
 
+/* Islands Dark — flat, near-black surfaces, subtle borders, one blue accent.
+   Palette from the "Dark Islands" VS Code theme (JetBrains-Fleet style). */
 .dark {
-  --background: oklch(0.18 0.02 271.27);
-  --foreground: oklch(0.9 0.01 238.47);
-  --card: oklch(0.22 0.02 271.67);
-  --card-foreground: oklch(0.9 0.01 238.47);
-  --popover: oklch(0.22 0.02 271.67);
-  --popover-foreground: oklch(0.9 0.01 238.47);
-  --primary: oklch(0.71 0.15 239.07);
-  --primary-foreground: oklch(0.94 0.03 232.39);
-  --secondary: oklch(0.28 0.03 270.91);
-  --secondary-foreground: oklch(0.9 0.01 238.47);
-  --muted: oklch(0.28 0.03 270.91);
-  --muted-foreground: oklch(0.6 0.03 269.46);
-  --accent: oklch(0.28 0.03 270.91);
-  --accent-foreground: oklch(0.9 0.01 238.47);
-  --destructive: oklch(0.64 0.25 19.69);
-  --border: oklch(0.9 0.01 238.47 / 15%);
-  --input: oklch(0.9 0.01 238.47 / 20%);
-  --ring: oklch(0.66 0.13 227.15);
-  --chart-1: oklch(0.66 0.13 227.15);
-  --chart-2: oklch(0.6 0.1 269.83);
-  --chart-3: oklch(0.7 0.15 159.83);
-  --chart-4: oklch(0.8 0.1 100.65);
-  --chart-5: oklch(0.6 0.15 300.14);
-  --sidebar: oklch(0.22 0.02 271.67);
-  --sidebar-foreground: oklch(0.9 0.01 238.47);
-  --sidebar-primary: oklch(0.66 0.13 227.15);
-  --sidebar-primary-foreground: oklch(0.18 0.02 271.27);
-  --sidebar-accent: oklch(0.28 0.03 270.91);
-  --sidebar-accent-foreground: oklch(0.9 0.01 238.47);
-  --sidebar-border: oklch(0.9 0.01 238.47 / 15%);
-  --sidebar-ring: oklch(0.66 0.13 227.15);
+  --background: #121216; /* deep canvas behind panels */
+  --foreground: #bcbec4;
+  --card: #181a1d; /* surface: panels/topbar */
+  --card-foreground: #bcbec4;
+  --popover: #181a1d;
+  --popover-foreground: #bcbec4;
+  --primary: #548af7; /* accent blue */
+  --primary-foreground: #f8fafc;
+  --secondary: #25262a;
+  --secondary-foreground: #bcbec4;
+  --muted: #25262a;
+  --muted-foreground: #7a7e85; /* comments / dim text */
+  --accent: #25262a; /* hover / selection surface */
+  --accent-foreground: #e6e7ea;
+  --destructive: #e05561;
+  --border: #bcbec414; /* ~8% — barely-there, flat look */
+  --input: #bcbec41f; /* ~12% */
+  --ring: #548af7;
+  --chart-1: #56a8f5; /* functions blue */
+  --chart-2: #c77dbb; /* types purple */
+  --chart-3: #6aab73; /* strings green */
+  --chart-4: #cf8e6d; /* keywords orange */
+  --chart-5: #2aacb8; /* numbers teal */
+  --sidebar: #181a1d;
+  --sidebar-foreground: #bcbec4;
+  --sidebar-primary: #548af7;
+  --sidebar-primary-foreground: #f8fafc;
+  --sidebar-accent: #25262a;
+  --sidebar-accent-foreground: #e6e7ea;
+  --sidebar-border: #bcbec414;
+  --sidebar-ring: #548af7;
 
   --shadow-2xs: 0px 1px 2px 0px oklch(0 0 0 / 0.01);
   --shadow-xs: 0px 1px 2px 0px oklch(0 0 0 / 0.01);
@@ -276,16 +278,16 @@ body,
   }
 }
 
-/* Dracula syntax highlighting (Prism tokens). Used by the diff views and the
-   GitHub settings code block. Replaces the prism-tomorrow theme. */
+/* Islands Dark syntax highlighting (Prism tokens). Used by the diff views and
+   the GitHub settings code block. Matches the "Dark Islands" palette. */
 .token.comment,
 .token.prolog,
 .token.doctype,
 .token.cdata {
-  color: #6272a4;
+  color: #7a7e85;
 }
 .token.punctuation {
-  color: #f8f8f2;
+  color: #bcbec4;
 }
 .token.namespace {
   opacity: 0.7;
@@ -295,34 +297,36 @@ body,
 .token.symbol,
 .token.boolean,
 .token.number {
-  color: #bd93f9;
+  color: #2aacb8;
 }
 .token.tag,
 .token.keyword,
 .token.operator,
 .token.deleted {
-  color: #ff79c6;
+  color: #cf8e6d;
 }
 .token.selector,
 .token.string,
 .token.char,
 .token.attr-value,
 .token.inserted {
-  color: #f1fa8c;
+  color: #6aab73;
 }
-.token.function,
-.token.class-name {
-  color: #50fa7b;
+.token.function {
+  color: #56a8f5;
 }
-.token.builtin,
+.token.class-name,
+.token.builtin {
+  color: #c77dbb;
+}
 .token.attr-name,
 .token.variable {
-  color: #8be9fd;
+  color: #bcbec4;
 }
 .token.regex,
 .token.important,
 .token.url {
-  color: #ffb86c;
+  color: #cf8e6d;
 }
 .token.important,
 .token.bold {

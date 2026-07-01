@@ -1,6 +1,10 @@
 "use client";
 
 import { RiAlertLine } from "@remixicon/react";
+import { useEffect } from "react";
+import { Island } from "@/components/island";
+import { TerminalPanel } from "@/components/terminal-panel";
+import { toggleTerminal, useTerminalOpen } from "@/lib/terminal-open";
 import Link from "@/lib/link";
 import { Button } from "@/components/ui/button";
 import {
@@ -45,9 +49,27 @@ export function Workspace(data: WorkspaceData) {
     null,
   );
   const conflicts = data.merge.conflicted.length;
+  const termOpen = useTerminalOpen();
+
+  // Ctrl+J (Cmd+J) toggles the docked terminal, like VS Code.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (
+        (e.ctrlKey || e.metaKey) &&
+        !e.shiftKey &&
+        !e.altKey &&
+        e.code === "KeyJ"
+      ) {
+        e.preventDefault();
+        toggleTerminal();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
 
   return (
-    <div className="flex h-screen flex-col">
+    <div className="bg-background flex h-screen flex-col">
       <Topbar repo={data.repo} current={current} branches={data.branches} />
 
       {conflicts > 0 ? (
@@ -63,37 +85,59 @@ export function Workspace(data: WorkspaceData) {
         </div>
       ) : null}
 
-      <ResizablePanelGroup orientation="horizontal" className="flex-1">
+      <ResizablePanelGroup orientation="horizontal" className="flex-1 p-1.5">
         <ResizablePanel defaultSize="20%" minSize="14%" maxSize="32%">
-          <SidebarPanel
-            branches={data.branches}
-            remotes={data.remotes}
-            tags={data.tags}
-            stashes={data.stashes}
-          />
+          <Island>
+            <SidebarPanel
+              branches={data.branches}
+              remotes={data.remotes}
+              tags={data.tags}
+              stashes={data.stashes}
+            />
+          </Island>
         </ResizablePanel>
-        <ResizableHandle />
+        <ResizableHandle className="bg-transparent" />
 
         <ResizablePanel defaultSize="55%" minSize="30%">
-          <ResizablePanelGroup orientation="vertical">
-            <ResizablePanel defaultSize="60%" minSize="25%">
-              <CommitGraph
-                commits={data.commits}
-                selected={selected}
-                onSelect={setSelected}
-              />
+          <ResizablePanelGroup
+            key={termOpen ? "with-terminal" : "no-terminal"}
+            orientation="vertical"
+          >
+            <ResizablePanel defaultSize={termOpen ? "45%" : "60%"} minSize="20%">
+              <Island>
+                <CommitGraph
+                  commits={data.commits}
+                  selected={selected}
+                  onSelect={setSelected}
+                />
+              </Island>
             </ResizablePanel>
-            <ResizableHandle />
-            <ResizablePanel defaultSize="40%" minSize="15%">
-              <CommitDetailPane sha={selected} />
+            <ResizableHandle className="bg-transparent" />
+            <ResizablePanel defaultSize={termOpen ? "25%" : "40%"} minSize="15%">
+              <Island>
+                <CommitDetailPane sha={selected} />
+              </Island>
             </ResizablePanel>
+
+            {termOpen ? (
+              <>
+                <ResizableHandle className="bg-transparent" />
+                <ResizablePanel defaultSize="30%" minSize="12%">
+                  <Island>
+                    <TerminalPanel />
+                  </Island>
+                </ResizablePanel>
+              </>
+            ) : null}
           </ResizablePanelGroup>
         </ResizablePanel>
 
-        <ResizableHandle />
+        <ResizableHandle className="bg-transparent" />
 
         <ResizablePanel defaultSize="25%" minSize="18%" maxSize="40%">
-          <ChangesPanel files={data.status} />
+          <Island>
+            <ChangesPanel files={data.status} />
+          </Island>
         </ResizablePanel>
       </ResizablePanelGroup>
     </div>

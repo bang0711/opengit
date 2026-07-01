@@ -10,7 +10,7 @@ import {
 } from "@remixicon/react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ActionTooltip } from "@/components/action-tooltip";
 import { Button } from "@/components/ui/button";
 import {
@@ -24,26 +24,24 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
-import { usePersistedState } from "@/hooks/use-persisted-state";
 import { setEchoSink } from "@/lib/terminal-bus";
+import { setTerminalOpen, toggleTerminal } from "@/lib/terminal-open";
+import {
+  addSession,
+  closeSession,
+  ensureSession,
+  renameSession,
+  setActiveSession,
+  type TermSession as Session,
+  useActiveSession,
+  useSessions,
+} from "@/lib/terminal-sessions";
 import {
   type TabPosition,
   setTerminalSettings,
   useTerminalSettings,
 } from "@/lib/terminal-settings";
 import { cn } from "@/lib/utils";
-
-/** Toggle the terminal from anywhere. */
-export function toggleTerminal() {
-  window.dispatchEvent(new CustomEvent("opengit:toggle-terminal"));
-}
-
-function uuid(): string {
-  if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
-    return crypto.randomUUID();
-  }
-  return `t-${Date.now()}-${Math.floor(Math.random() * 1e9)}`;
-}
 
 /** One xterm session bound to a backend PTY by id. Kept mounted while hidden so
  *  background output keeps flowing; refits when it becomes active. */
@@ -74,21 +72,45 @@ function TerminalView({
       const host = hostRef.current;
       if (disposed || !host) return;
       const dark = document.documentElement.classList.contains("dark");
-      const fg = dark ? "#d6deeb" : "#1f2328";
+      // Islands Dark palette (matches globals.css .dark + Prism tokens); a light
+      // fallback for the light theme. Transparent bg so the island surface shows.
+      const theme = dark
+        ? {
+            background: "#181a1d",
+            foreground: "#bcbec4",
+            cursor: "#bcbec4",
+            cursorAccent: "#181a1d",
+            selectionBackground: "rgba(84,138,247,0.28)",
+            black: "#181a1d",
+            red: "#e05561",
+            green: "#6aab73",
+            yellow: "#cf8e6d",
+            blue: "#548af7",
+            magenta: "#c77dbb",
+            cyan: "#2aacb8",
+            white: "#bcbec4",
+            brightBlack: "#7a7e85",
+            brightRed: "#e05561",
+            brightGreen: "#6aab73",
+            brightYellow: "#cf8e6d",
+            brightBlue: "#56a8f5",
+            brightMagenta: "#c77dbb",
+            brightCyan: "#2aacb8",
+            brightWhite: "#e6e7ea",
+          }
+        : {
+            background: "#ffffff",
+            foreground: "#1f2328",
+            cursor: "#1f2328",
+            selectionBackground: "rgba(0,0,0,0.15)",
+          };
       const term = new Terminal({
         fontFamily:
           "'Dank Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace",
         fontSize: 12,
         cursorBlink: true,
         allowTransparency: true,
-        theme: {
-          background: "rgba(0,0,0,0)",
-          foreground: fg,
-          cursor: fg,
-          selectionBackground: dark
-            ? "rgba(255,255,255,0.2)"
-            : "rgba(0,0,0,0.15)",
-        },
+        theme,
       });
       const fit = new FitAddon();
       term.loadAddon(fit);
@@ -102,6 +124,14 @@ function TerminalView({
       term.attachCustomKeyEventHandler((e) => {
         if (e.type !== "keydown") return true;
         const mod = e.ctrlKey || e.metaKey;
+        // Ctrl/Cmd+J toggles the terminal even when it has focus — xterm would
+        // otherwise consume it (as LF), so handle + stop it here.
+        if (mod && !e.shiftKey && !e.altKey && e.code === "KeyJ") {
+          e.preventDefault();
+          e.stopPropagation();
+          toggleTerminal();
+          return false;
+        }
         if (mod && e.code === "KeyC" && (e.shiftKey || term.hasSelection())) {
           const sel = term.getSelection();
           if (sel) navigator.clipboard?.writeText(sel);
@@ -168,13 +198,10 @@ function TerminalView({
   );
 }
 
-type Session = { id: string; name: string };
 
 export function TerminalPanel() {
-  const [open, setOpen] = useState(false);
-  const [sessions, setSessions] = useState<Session[]>([]);
-  const [activeId, setActiveId] = useState<string | null>(null);
-  const [height, setHeight] = usePersistedState("opengit.terminalHeight", 256);
+  const sessions = useSessions();
+  const activeId = useActiveSession();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
   const activeIdRef = useRef<string | null>(null);
@@ -193,60 +220,20 @@ export function TerminalPanel() {
     return () => setEchoSink(null);
   }, []);
 
-  const add = useCallback(() => {
-    const id = uuid();
-    setSessions((s) => [...s, { id, name: `Terminal ${s.length + 1}` }]);
-    setActiveId(id);
-  }, []);
-
-  const close = (id: string) => {
-    setSessions((prev) => {
-      const rest = prev.filter((x) => x.id !== id);
-      setActiveId((cur) => (cur === id ? (rest.at(-1)?.id ?? null) : cur));
-      if (rest.length === 0) setOpen(false);
-      return rest;
-    });
-  };
-
   const startRename = (s: Session) => {
     setEditingId(s.id);
     setDraft(s.name);
   };
   const commitRename = () => {
-    if (editingId) {
-      const name = draft.trim();
-      setSessions((prev) =>
-        prev.map((x) => (x.id === editingId && name ? { ...x, name } : x)),
-      );
-    }
+    if (editingId) renameSession(editingId, draft);
     setEditingId(null);
   };
 
+  // The panel is only mounted while open (workspace renders it), so ensure a
+  // session exists on mount. The list itself persists across toggles.
   useEffect(() => {
-    const toggle = () => setOpen((o) => !o);
-    window.addEventListener("opengit:toggle-terminal", toggle);
-    return () => window.removeEventListener("opengit:toggle-terminal", toggle);
+    ensureSession();
   }, []);
-
-  useEffect(() => {
-    if (open && sessions.length === 0) add();
-  }, [open, sessions.length, add]);
-
-  const startResize = (e: React.PointerEvent) => {
-    e.preventDefault();
-    const move = (ev: PointerEvent) => {
-      const h = window.innerHeight - ev.clientY;
-      setHeight(Math.min(window.innerHeight * 0.85, Math.max(140, Math.round(h))));
-    };
-    const up = () => {
-      window.removeEventListener("pointermove", move);
-      window.removeEventListener("pointerup", up);
-    };
-    window.addEventListener("pointermove", move);
-    window.addEventListener("pointerup", up);
-  };
-
-  if (!open) return null;
 
   const horizontal = tabPosition === "top" || tabPosition === "bottom";
   const tabsFirst = tabPosition === "top" || tabPosition === "left";
@@ -254,7 +241,7 @@ export function TerminalPanel() {
   const controls = (
     <div className={cn("flex items-center gap-0.5", horizontal ? "ml-auto" : "mt-auto")}>
       <ActionTooltip label="New terminal">
-        <Button variant="ghost" size="icon-xs" onClick={add}>
+        <Button variant="ghost" size="icon-xs" onClick={addSession}>
           <RiAddLine />
         </Button>
       </ActionTooltip>
@@ -292,8 +279,12 @@ export function TerminalPanel() {
           </p>
         </DropdownMenuContent>
       </DropdownMenu>
-      <ActionTooltip label="Hide terminal">
-        <Button variant="ghost" size="icon-xs" onClick={() => setOpen(false)}>
+      <ActionTooltip label="Hide terminal (Ctrl+J)">
+        <Button
+          variant="ghost"
+          size="icon-xs"
+          onClick={() => setTerminalOpen(false)}
+        >
           <RiSubtractLine />
         </Button>
       </ActionTooltip>
@@ -329,7 +320,7 @@ export function TerminalPanel() {
           <button
             type="button"
             key={s.id}
-            onClick={() => setActiveId(s.id)}
+            onClick={() => setActiveSession(s.id)}
             onDoubleClick={() => startRename(s)}
             className={cn(
               "flex items-center gap-1.5 rounded px-2 py-0.5 text-xs",
@@ -344,7 +335,7 @@ export function TerminalPanel() {
               tabIndex={-1}
               onClick={(e) => {
                 e.stopPropagation();
-                close(s.id);
+                closeSession(s.id);
               }}
               className="ml-auto rounded text-muted-foreground hover:text-foreground"
             >
@@ -360,17 +351,10 @@ export function TerminalPanel() {
   return (
     <div
       className={cn(
-        "fixed inset-x-0 bottom-0 z-40 flex border-t border-border bg-background shadow-lg",
+        "flex h-full min-h-0",
         horizontal ? "flex-col" : "flex-row",
       )}
-      style={{ height }}
     >
-      {/* drag-to-resize handle on the top edge */}
-      <div
-        onPointerDown={startResize}
-        className="absolute inset-x-0 -top-1 z-10 h-2 cursor-row-resize"
-      />
-
       {tabsFirst && tabBar}
       <div className="relative min-h-0 flex-1">
         {sessions.map((s) => (
@@ -378,7 +362,7 @@ export function TerminalPanel() {
             key={s.id}
             id={s.id}
             active={s.id === activeId}
-            onExit={() => close(s.id)}
+            onExit={() => closeSession(s.id)}
           />
         ))}
       </div>

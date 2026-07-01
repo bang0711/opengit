@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useLoaderData, useNavigate } from "react-router-dom";
 import type { ReflogEntry } from "@shared/types";
 import { checkoutCommit, resetToCommit } from "@/app/actions";
+import { Island } from "@/components/island";
 import { Button } from "@/components/ui/button";
 import {
   ContextMenu,
@@ -12,7 +13,6 @@ import {
   ContextMenuTrigger,
 } from "@/components/ui/context-menu";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import Link from "@/lib/link";
 import { notify } from "@/lib/notify";
 
 export async function reflogLoader() {
@@ -95,13 +95,16 @@ export function Reflog() {
   const onDone = () => navigate("/");
 
   return (
-    <div className="flex h-screen flex-col bg-background">
+    <div className="bg-background h-screen p-1.5">
+      <Island>
       <header className="flex h-11 shrink-0 items-center gap-3 border-b border-border bg-card px-3">
-        <Button asChild variant="outline" size="sm">
-          <Link href="/">
-            <RiArrowLeftLine />
-            Back to repository
-          </Link>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => window.history.back()}
+        >
+          <RiArrowLeftLine />
+          Back
         </Button>
         <div className="flex items-center gap-2 text-xs">
           <RiHistoryLine className="size-4 shrink-0 text-muted-foreground" />
@@ -121,6 +124,7 @@ export function Reflog() {
           ))}
         </ScrollArea>
       )}
+      </Island>
     </div>
   );
 }

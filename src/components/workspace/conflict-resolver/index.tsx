@@ -8,7 +8,6 @@ import {
   RiLoader4Line,
 } from "@remixicon/react";
 import { ActionTooltip } from "@/components/action-tooltip";
-import Link from "@/lib/link";
 import { useRouter } from "@/lib/router";
 import { useEffect, useState, useTransition } from "react";
 import {
@@ -19,6 +18,7 @@ import {
   resolveTheirs,
   saveResolution,
 } from "@/app/actions";
+import { Island } from "@/components/island";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { notify } from "@/lib/notify";
@@ -57,13 +57,16 @@ export function ConflictResolver({
     });
 
   return (
-    <div className="bg-background flex h-screen flex-col">
+    <div className="bg-background h-screen p-1.5">
+      <Island>
       <header className="border-border bg-card flex h-11 shrink-0 items-center gap-3 border-b px-3">
-        <Button asChild variant="outline" size="sm">
-          <Link href="/">
-            <RiArrowLeftLine />
-            Back
-          </Link>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => window.history.back()}
+        >
+          <RiArrowLeftLine />
+          Back
         </Button>
         <div className="flex items-center gap-2 text-xs">
           <RiGitMergeLine className="size-4 text-amber-500" />
@@ -157,6 +160,7 @@ export function ConflictResolver({
           ) : null}
         </div>
       )}
+      </Island>
     </div>
   );
 }

@@ -3,7 +3,7 @@
 import { RiArrowLeftLine } from "@remixicon/react";
 import { useEffect, useState } from "react";
 import { useRevalidator } from "react-router-dom";
-import Link from "@/lib/link";
+import { Island } from "@/components/island";
 import { Button } from "@/components/ui/button";
 import {
   ResizableHandle,
@@ -38,12 +38,14 @@ export function WorkingTreeViewer({
 
   return (
     <div className="bg-background flex h-screen flex-col">
-      <header className="border-border bg-card flex h-11 shrink-0 items-center gap-3 border-b px-3">
-        <Button asChild variant="outline" size="sm">
-          <Link href="/">
-            <RiArrowLeftLine />
-            Back to repository
-          </Link>
+      <header className="flex h-11 shrink-0 items-center gap-3 px-3">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => window.history.back()}
+        >
+          <RiArrowLeftLine />
+          Back
         </Button>
 
         <span className="text-xs font-medium">Working tree changes</span>
@@ -52,36 +54,35 @@ export function WorkingTreeViewer({
         </span>
       </header>
 
-      <ResizablePanelGroup orientation="horizontal" className="flex-1">
-        <ResizablePanel
-          defaultSize="24%"
-          minSize="15%"
-          maxSize="45%"
-          className="relative"
-        >
-          <ScrollArea className="bg-sidebar inset-0 h-full">
-            <FileTree
-              nodes={nodes}
-              selected={selected}
-              wt
-              onSelect={setSelected}
-            />
-            <ScrollBar orientation="horizontal" />
-          </ScrollArea>
+      <ResizablePanelGroup orientation="horizontal" className="flex-1 p-1.5 pt-0">
+        <ResizablePanel defaultSize="24%" minSize="15%" maxSize="45%">
+          <Island>
+            <ScrollArea className="bg-sidebar h-full">
+              <FileTree
+                nodes={nodes}
+                selected={selected}
+                wt
+                onSelect={setSelected}
+              />
+              <ScrollBar orientation="horizontal" />
+            </ScrollArea>
+          </Island>
         </ResizablePanel>
 
-        <ResizableHandle />
+        <ResizableHandle className="bg-transparent" />
 
-        <ResizablePanel defaultSize="76%" className="relative">
-          <div className="absolute inset-0">
+        <ResizablePanel defaultSize="76%">
+          <Island>
             {selected ? (
-              <WorkingDiff file={selected} />
+              <div className="flex min-h-0 flex-1 flex-col">
+                <WorkingDiff file={selected} />
+              </div>
             ) : (
-              <div className="text-muted-foreground flex h-full items-center justify-center text-sm">
+              <div className="text-muted-foreground flex h-full flex-1 items-center justify-center text-sm">
                 No changes in the working tree.
               </div>
             )}
-          </div>
+          </Island>
         </ResizablePanel>
       </ResizablePanelGroup>
     </div>

@@ -4,6 +4,7 @@ import { RiArrowLeftLine, RiGitCommitLine } from "@remixicon/react";
 import { isImagePath } from "@shared/image";
 import { useEffect, useRef, useState } from "react";
 import { commitFileDiff } from "@/app/actions";
+import { Island } from "@/components/island";
 import { Button } from "@/components/ui/button";
 import {
   ResizableHandle,
@@ -13,7 +14,6 @@ import {
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { FileTree } from "@/components/workspace/file-tree";
 import type { TreeNode } from "@/lib/file-tree";
-import Link from "@/lib/link";
 import { DiffPane } from "./diff-pane";
 
 /**
@@ -92,12 +92,14 @@ export function CommitDiffViewer({
 
   return (
     <div className="bg-background flex h-screen flex-col">
-      <header className="border-border bg-card flex h-11 shrink-0 items-center gap-3 border-b px-3">
-        <Button asChild variant="outline" size="sm">
-          <Link href="/">
-            <RiArrowLeftLine />
-            Back to repository
-          </Link>
+      <header className="flex h-11 shrink-0 items-center gap-3 px-3">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => window.history.back()}
+        >
+          <RiArrowLeftLine />
+          Back
         </Button>
 
         <div className="flex min-w-0 items-center gap-2 text-xs">
@@ -112,37 +114,36 @@ export function CommitDiffViewer({
         </span>
       </header>
 
-      <ResizablePanelGroup orientation="horizontal" className="flex-1">
-        <ResizablePanel
-          defaultSize="24%"
-          minSize="15%"
-          maxSize="45%"
-          className="relative"
-        >
-          <ScrollArea className="bg-sidebar inset-0 h-full">
-            <FileTree
-              nodes={nodes}
-              selected={selected}
-              onSelect={setSelected}
-            />
-            <ScrollBar orientation="horizontal" />
-          </ScrollArea>
+      <ResizablePanelGroup orientation="horizontal" className="flex-1 p-1.5 pt-0">
+        <ResizablePanel defaultSize="24%" minSize="15%" maxSize="45%">
+          <Island>
+            <ScrollArea className="bg-sidebar h-full">
+              <FileTree
+                nodes={nodes}
+                selected={selected}
+                onSelect={setSelected}
+              />
+              <ScrollBar orientation="horizontal" />
+            </ScrollArea>
+          </Island>
         </ResizablePanel>
 
-        <ResizableHandle />
+        <ResizableHandle className="bg-transparent" />
 
-        <ResizablePanel defaultSize="76%" className="relative">
-          <div className="absolute inset-0 flex flex-col">
-            <DiffPane
-              sha={sha}
-              patch={patch}
-              pending={pending}
-              error={error}
-              file={selected}
-              oldLabel={oldLabel}
-              newLabel={newLabel}
-            />
-          </div>
+        <ResizablePanel defaultSize="76%">
+          <Island>
+            <div className="flex min-h-0 flex-1 flex-col">
+              <DiffPane
+                sha={sha}
+                patch={patch}
+                pending={pending}
+                error={error}
+                file={selected}
+                oldLabel={oldLabel}
+                newLabel={newLabel}
+              />
+            </div>
+          </Island>
         </ResizablePanel>
       </ResizablePanelGroup>
     </div>
