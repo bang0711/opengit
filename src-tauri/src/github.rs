@@ -116,7 +116,13 @@ async fn gh_fetch(
     }
     if is_get {
         if let Some(e) = etag {
-            st.etag.lock().unwrap().insert(path.to_string(), (e, data.clone()));
+            let mut cache = st.etag.lock().unwrap();
+            // ponytail: crude cap — clear-all at 256; LRU if churn ever matters.
+            // A miss only costs one non-304 request.
+            if cache.len() >= 256 {
+                cache.clear();
+            }
+            cache.insert(path.to_string(), (e, data.clone()));
         }
     }
     Ok(data)

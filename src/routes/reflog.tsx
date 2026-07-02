@@ -1,7 +1,8 @@
 import { RiArrowLeftLine, RiHistoryLine } from "@remixicon/react";
-import { useState } from "react";
-import { useLoaderData, useNavigate } from "react-router-dom";
 import type { ReflogEntry } from "@shared/types";
+import { useVirtualizer } from "@tanstack/react-virtual";
+import { useRef, useState } from "react";
+import { useLoaderData, useNavigate } from "react-router-dom";
 import { checkoutCommit, resetToCommit } from "@/app/actions";
 import { Island } from "@/components/island";
 import { Button } from "@/components/ui/button";
@@ -94,36 +95,59 @@ export function Reflog() {
   // After any reflog action the working state moved — go back to the repo view.
   const onDone = () => navigate("/");
 
+  // Virtualize: reflogs run long and every row carries a Radix ContextMenu —
+  // keep the DOM viewport-sized (same pattern as commit-graph).
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const virt = useVirtualizer({
+    count: entries.length,
+    getScrollElement: () => scrollRef.current,
+    estimateSize: () => 29, // py-1.5 + text-xs + border-b
+    overscan: 12,
+  });
+
   return (
     <div className="bg-background h-screen p-1.5">
       <Island>
-      <header className="flex h-11 shrink-0 items-center gap-3 border-b border-border bg-card px-3">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => window.history.back()}
-        >
-          <RiArrowLeftLine />
-          Back
-        </Button>
-        <div className="flex items-center gap-2 text-xs">
-          <RiHistoryLine className="size-4 shrink-0 text-muted-foreground" />
-          <span className="font-medium">Reflog</span>
-          <span className="text-muted-foreground">HEAD history</span>
-        </div>
-      </header>
+        <header className="flex h-11 shrink-0 items-center gap-3 border-b border-border bg-card px-3">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => window.history.back()}
+          >
+            <RiArrowLeftLine />
+            Back
+          </Button>
+          <div className="flex items-center gap-2 text-xs">
+            <RiHistoryLine className="size-4 shrink-0 text-muted-foreground" />
+            <span className="font-medium">Reflog</span>
+            <span className="text-muted-foreground">HEAD history</span>
+          </div>
+        </header>
 
-      {error ? (
-        <div className="flex flex-1 items-center justify-center text-sm text-muted-foreground">
-          {error}
-        </div>
-      ) : (
-        <ScrollArea className="min-h-0 flex-1">
-          {entries.map((e) => (
-            <Row key={e.selector} entry={e} onDone={onDone} />
-          ))}
-        </ScrollArea>
-      )}
+        {error ? (
+          <div className="flex flex-1 items-center justify-center text-sm text-muted-foreground">
+            {error}
+          </div>
+        ) : (
+          <ScrollArea className="min-h-0 flex-1" viewportRef={scrollRef}>
+            <div style={{ height: virt.getTotalSize(), position: "relative" }}>
+              {virt.getVirtualItems().map((vi) => (
+                <div
+                  key={entries[vi.index].selector}
+                  style={{
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    width: "100%",
+                    transform: `translateY(${vi.start}px)`,
+                  }}
+                >
+                  <Row entry={entries[vi.index]} onDone={onDone} />
+                </div>
+              ))}
+            </div>
+          </ScrollArea>
+        )}
       </Island>
     </div>
   );

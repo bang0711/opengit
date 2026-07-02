@@ -25,6 +25,7 @@ import type { Branch, Remote, Stash, Tag } from "@/lib/git";
 import { notify } from "@/lib/notify";
 import { BranchDnd } from "./branch-dnd";
 import { BranchRow, ICON } from "./branch-row";
+import { MaybeVirtualList } from "./maybe-virtual-list";
 import { NewRemoteBranchDialog } from "./new-remote-branch-dialog";
 import { LfsSection } from "./lfs-section";
 import { Section } from "./section";
@@ -128,9 +129,13 @@ export function SidebarPanel({ branches, remotes, tags, stashes }: Props) {
               </ContextMenuItem>
             }
           >
-            {local.map((b) => (
-              <BranchRow key={b.fullName} branch={b} current={current} />
-            ))}
+            <MaybeVirtualList
+              items={local}
+              rowHeight={24}
+              renderRow={(b) => (
+                <BranchRow key={b.fullName} branch={b} current={current} />
+              )}
+            />
           </Section>
 
           <Section
@@ -175,14 +180,18 @@ export function SidebarPanel({ branches, remotes, tags, stashes }: Props) {
                     {remote}
                   </div>
                   
-                  {list.map((b) => (
-                    <BranchRow
-                      key={b.fullName}
-                      branch={b}
-                      current={current}
-                      remote
-                    />
-                  ))}
+                  <MaybeVirtualList
+                    items={list}
+                    rowHeight={24}
+                    renderRow={(b) => (
+                      <BranchRow
+                        key={b.fullName}
+                        branch={b}
+                        current={current}
+                        remote
+                      />
+                    )}
+                  />
                 </div>
               );
             })}
@@ -207,9 +216,11 @@ export function SidebarPanel({ branches, remotes, tags, stashes }: Props) {
               ) : null
             }
           >
-            {tags.map((t) => (
-              <TagRow key={t.name} tag={t} />
-            ))}
+            <MaybeVirtualList
+              items={tags}
+              rowHeight={24}
+              renderRow={(t) => <TagRow key={t.name} tag={t} />}
+            />
           </Section>
 
           <Section
@@ -217,9 +228,11 @@ export function SidebarPanel({ branches, remotes, tags, stashes }: Props) {
             label="Stashes"
             count={stashes.length}
           >
-            {stashes.map((s) => (
-              <StashRow key={s.ref} stash={s} />
-            ))}
+            <MaybeVirtualList
+              items={stashes}
+              rowHeight={24}
+              renderRow={(s) => <StashRow key={s.ref} stash={s} />}
+            />
           </Section>
 
           <SubmoduleSection />

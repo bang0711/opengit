@@ -1,7 +1,14 @@
 "use client";
 
 import { RiGitCommitLine, RiLoader4Line, RiUser3Line } from "@remixicon/react";
-import { useEffect, useState, useTransition } from "react";
+import { useVirtualizer } from "@tanstack/react-virtual";
+import {
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  useTransition,
+} from "react";
 import { commitDetail } from "@/app/actions";
 import { Notice } from "@/components/shared/notice";
 import { Badge } from "@/components/ui/badge";
@@ -32,6 +39,32 @@ export function CommitDetailPane({ sha }: { sha: string | null }) {
     });
   }, [sha]);
 
+  // Virtualize the file list (giant merge commits list thousands of files). The
+  // list sits below variable-height content (subject/body/meta) in the same
+  // scroll element, so measure its top offset and feed it as scrollMargin.
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
+  const [listTop, setListTop] = useState(0);
+  useLayoutEffect(() => {
+    // detail is the trigger: the header above the list changes height with it.
+    void detail;
+    const list = listRef.current;
+    const scroll = scrollRef.current;
+    if (!list || !scroll) return;
+    setListTop(
+      list.getBoundingClientRect().top -
+        scroll.getBoundingClientRect().top +
+        scroll.scrollTop,
+    );
+  }, [detail]);
+  const virt = useVirtualizer({
+    count: detail?.files.length ?? 0,
+    getScrollElement: () => scrollRef.current,
+    estimateSize: () => 20, // py-0.5 + text-xs
+    overscan: 12,
+    scrollMargin: listTop,
+  });
+
   return (
     <div className="flex h-full flex-col bg-card">
       <div className="border-border text-muted-foreground flex h-8 shrink-0 items-center gap-2 border-b px-3 text-xs font-semibold">
@@ -52,7 +85,7 @@ export function CommitDetailPane({ sha }: { sha: string | null }) {
       ) : error ? (
         <p className="text-destructive p-3 text-xs">{error}</p>
       ) : detail ? (
-        <ScrollArea className="min-h-0 flex-1">
+        <ScrollArea className="min-h-0 flex-1" viewportRef={scrollRef}>
           <div className="flex flex-col gap-3 p-3">
             <p className="text-sm leading-snug font-medium">{detail.subject}</p>
             {detail.body ? (
@@ -90,10 +123,29 @@ export function CommitDetailPane({ sha }: { sha: string | null }) {
               Files
               <Badge variant="secondary">{detail.files.length}</Badge>
             </div>
-            <div className="flex flex-col">
-              {detail.files.map((f) => (
-                <FileRow key={f.path} file={f} sha={detail.sha} />
-              ))}
+            <div
+              ref={listRef}
+              style={{ height: virt.getTotalSize(), position: "relative" }}
+            >
+              {virt.getVirtualItems().map((vi) => {
+                const f = detail.files[vi.index];
+                return (
+                  <div
+                    key={f.path}
+                    style={{
+                      position: "absolute",
+                      top: 0,
+                      left: 0,
+                      width: "100%",
+                      // vi.start is scroll-element-relative (includes
+                      // scrollMargin); rows are positioned inside the list.
+                      transform: `translateY(${vi.start - virt.options.scrollMargin}px)`,
+                    }}
+                  >
+                    <FileRow file={f} sha={detail.sha} />
+                  </div>
+                );
+              })}
             </div>
           </div>
         </ScrollArea>

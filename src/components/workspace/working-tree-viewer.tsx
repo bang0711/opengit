@@ -10,7 +10,6 @@ import {
   ResizablePanel,
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { FileTree } from "@/components/workspace/file-tree";
 import { WorkingDiff } from "@/components/workspace/working-diff";
 import type { TreeNode } from "@/lib/file-tree";
@@ -54,18 +53,19 @@ export function WorkingTreeViewer({
         </span>
       </header>
 
-      <ResizablePanelGroup orientation="horizontal" className="flex-1 p-1.5 pt-0">
+      <ResizablePanelGroup
+        orientation="horizontal"
+        className="flex-1 p-1.5 pt-0"
+      >
         <ResizablePanel defaultSize="24%" minSize="15%" maxSize="45%">
           <Island>
-            <ScrollArea className="bg-sidebar h-full">
-              <FileTree
-                nodes={nodes}
-                selected={selected}
-                wt
-                onSelect={setSelected}
-              />
-              <ScrollBar orientation="horizontal" />
-            </ScrollArea>
+            <FileTree
+              className="bg-sidebar"
+              nodes={nodes}
+              selected={selected}
+              wt
+              onSelect={setSelected}
+            />
           </Island>
         </ResizablePanel>
 

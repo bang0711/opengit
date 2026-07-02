@@ -17,7 +17,7 @@ export function Island({
     <div className="h-full min-h-0 p-1.5">
       <div
         className={cn(
-          "flex h-full min-h-0 flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-[0_2px_12px_rgb(0_0_0/0.35)]",
+          "border-border bg-card flex h-full min-h-0 flex-col overflow-hidden rounded-2xl border shadow-[0_2px_12px_rgb(0_0_0/0.35)]",
           className,
         )}
       >

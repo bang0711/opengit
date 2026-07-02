@@ -5,19 +5,22 @@ import {
   RiArrowRightSLine,
   RiFolder3Line,
 } from "@remixicon/react";
-import Link from "@/lib/link";
 import { FileIcon } from "@/components/shared/file-icon";
-import { usePersistedState } from "@/hooks/use-persisted-state";
 import type { TreeNode } from "@/lib/file-tree";
+import Link from "@/lib/link";
 import { cn } from "@/lib/utils";
 import { Stat } from "./stat";
 
+/** One flat tree row (dir or file); the tree itself is flattened and
+ *  virtualized by FileTree, which owns expansion state. */
 export function TreeItem({
   node,
   sha,
   selected,
   wt,
   depth,
+  open,
+  onToggle,
   onSelect,
 }: {
   node: TreeNode;
@@ -25,44 +28,28 @@ export function TreeItem({
   selected: string | null;
   wt?: boolean;
   depth: number;
+  open: boolean;
+  onToggle: (path: string) => void;
   onSelect?: (path: string) => void;
 }) {
-  const [open, setOpen] = usePersistedState(`opengit.tree:${node.path}`, true);
   const pad = { paddingLeft: 8 + depth * 12 };
 
   if (node.type === "dir") {
     return (
-      <div>
-        <button
-          type="button"
-          onClick={() => setOpen((o) => !o)}
-          style={pad}
-          className="hover:bg-muted/60 flex w-full items-center gap-1 py-0.5 pr-2 text-left"
-        >
-          {open ? (
-            <RiArrowDownSLine className="text-muted-foreground size-3.5 shrink-0" />
-          ) : (
-            <RiArrowRightSLine className="text-muted-foreground size-3.5 shrink-0" />
-          )}
-          <RiFolder3Line className="text-muted-foreground size-3.5 shrink-0" />
-          <span className="truncate">{node.name}</span>
-        </button>
+      <button
+        type="button"
+        onClick={() => onToggle(node.path)}
+        style={pad}
+        className="hover:bg-muted/60 flex w-full items-center gap-1 py-0.5 pr-2 text-left"
+      >
         {open ? (
-          <div>
-            {node.children.map((child) => (
-              <TreeItem
-                key={child.path}
-                node={child}
-                sha={sha}
-                selected={selected}
-                wt={wt}
-                depth={depth + 1}
-                onSelect={onSelect}
-              />
-            ))}
-          </div>
-        ) : null}
-      </div>
+          <RiArrowDownSLine className="text-muted-foreground size-3.5 shrink-0" />
+        ) : (
+          <RiArrowRightSLine className="text-muted-foreground size-3.5 shrink-0" />
+        )}
+        <RiFolder3Line className="text-muted-foreground size-3.5 shrink-0" />
+        <span className="truncate">{node.name}</span>
+      </button>
     );
   }
 
