@@ -62,6 +62,16 @@ jobs:
     - name: Install dependencies
       run: bun install --frozen-lockfile
 
+    # Stamp the build with the tag's version. The tag is the single source of
+    # truth — this prevents a config/tag desync from shipping a wrongly-versioned
+    # installer (which makes the updater re-offer the same "update" forever and
+    # turns each update into a broken same-version reinstall).
+    - name: Sync version to tag
+      shell: bash
+      run: |
+        v="${{ github.ref_name }}"; v="${v#v}"
+        node scripts/set-version.mjs "$v"
+
     # Code-sign the Windows build (skipped automatically if WINDOWS_CERTIFICATE
     # secret is unset). Imports the base64 PFX, then injects its thumbprint +
     # timestamp settings into tauri.conf.json so tauri's bundler signs the exe
