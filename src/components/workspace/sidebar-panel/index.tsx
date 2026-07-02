@@ -23,6 +23,7 @@ import { ContextMenuItem } from "@/components/ui/context-menu";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import type { Branch, Remote, Stash, Tag } from "@/lib/git";
 import { notify } from "@/lib/notify";
+import { BranchDnd } from "./branch-dnd";
 import { BranchRow, ICON } from "./branch-row";
 import { NewRemoteBranchDialog } from "./new-remote-branch-dialog";
 import { LfsSection } from "./lfs-section";
@@ -98,6 +99,7 @@ export function SidebarPanel({ branches, remotes, tags, stashes }: Props) {
   return (
     <div className="flex h-full flex-col bg-sidebar text-sidebar-foreground">
       <ScrollArea className="min-h-0 flex-1">
+        <BranchDnd>
         <div className="flex flex-col gap-1 p-2">
           <Section
             icon={<RiGitBranchLine />}
@@ -226,6 +228,7 @@ export function SidebarPanel({ branches, remotes, tags, stashes }: Props) {
 
           <LfsSection />
         </div>
+        </BranchDnd>
       </ScrollArea>
 
       <div className="border-border shrink-0 border-t p-2">
